@@ -1,0 +1,11 @@
+# Python
+__pycache__/
+*.pyc
+
+# Office lock / temp files (created while a .docx/.pptx is open)
+~$*
+*.tmp
+
+# Editors
+.vscode/
+.idea/

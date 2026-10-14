@@ -1,0 +1,21 @@
+{
+  "name": "S3_kien_deadline",
+  "title": "S3: 3 kien, kien C co deadline 18 buoc",
+  "grid": ["S.....",
+           ".##.#.",
+           "......",
+           ".#..#.",
+           ".#.##.",
+           "......"],
+  "capacity": 1,
+  "parcels": [
+    {"name": "A", "pickup": [0, 2], "drop": [2, 0], "reward": 20},
+    {"name": "B", "pickup": [2, 3], "drop": [0, 5], "reward": 20},
+    {"name": "C", "pickup": [5, 5], "drop": [5, 0], "reward": 20, "deadline": 18}
+  ],
+  "rewards": {"step": -1, "illegal": -10, "late_penalty": 30},
+  "max_steps": 200,
+  "train": {"episodes": 100000, "gamma": 0.99, "alpha_ql": 0.5, "start_mode": "random_cell",
+            "eps_start": 1.0, "eps_end": 0.05, "decay_frac": 0.7, "eval_every": 500,
+            "best_ql": "ql_opt"}
+}
