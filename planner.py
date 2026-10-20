@@ -11,16 +11,9 @@ import numpy as np
 
 def value_iteration(env, gamma=0.99, theta=1e-8):
     """Tra ve (Q_opt, so trang thai dat toi)."""
-    states = list(env.reachable_states())
-    nonterm = [s for s in states if not all(x == 2 for x in s[2])]
-    S = np.array([env.encode(s) for s in nonterm])
-    NS = np.zeros((len(nonterm), 6), dtype=np.int64)
-    R = np.zeros((len(nonterm), 6))
-    D = np.zeros((len(nonterm), 6))
-    for k, s in enumerate(nonterm):
-        for a in range(6):
-            ns, r, done, _ = env.transition(s, a)
-            NS[k, a], R[k, a], D[k, a] = env.encode(ns), r, done
+    S = env.start_states("exploring")  # moi trang thai dat toi chua giao het hang
+    NS, R, D = (x[S] for x in env.tables())  # ham chuyen lap san trong delivery_env.py
+    D = D.astype(float)
 
     V = np.zeros(env.n_states)
     while True:
@@ -32,4 +25,4 @@ def value_iteration(env, gamma=0.99, theta=1e-8):
             break
     Q = np.zeros((env.n_states, 6))
     Q[S] = R + gamma * V[NS] * (1 - D)
-    return Q, len(states)
+    return Q, len(env.reachable_states())

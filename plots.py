@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.lines import Line2D  # noqa: E402
 from matplotlib.patches import Circle, Rectangle  # noqa: E402
 
-from agents import run_greedy  # noqa: E402
+from agents import load_q, run_greedy  # noqa: E402
 from delivery_env import (CARRYING, DELIVERED, DROP, MOVES, PICKUP, WAITING,  # noqa: E402
                           MultiDeliveryEnv, load_config)
 
@@ -33,24 +33,27 @@ def L(vi, en):
 
 # ----- Bang mau (mau chu luon la mau muc, mau du lieu chi o net/diem) -----
 INK, INK2, GRIDC, WALL, SURF = "#0b0b0b", "#52514e", "#e4e3df", "#3d3c39", "#ffffff"
-ALGO_COLOR = {"ql_opt": "#2a78d6", "ql_q0": "#1baf7a", "mc": "#eb6834", "mc_long": "#a8461c"}
-ALGO_LABEL = {"ql_opt": "Q-learning (Q0 = 30)", "ql_q0": "Q-learning (Q0 = 0)", "mc": "Monte Carlo",
-              "mc_long": "Monte Carlo, 4x episode, ε giảm chậm"}
-ALGO_TICK = {"ql_opt": "QL\nQ0=30", "ql_q0": "QL\nQ0=0", "mc": "MC", "mc_long": "MC\n4x"}
-PARCEL_COLOR = {"A": "#6250d6", "B": "#e87ba4", "C": "#008300"}
+# 3 slot dau cua bang mau phan loai (da kiem tra mu mau ca 3 cap); cau hinh cu ve mau xam trung tinh
+ALGO_COLOR = {"ql": "#2a78d6", "sarsa": "#1baf7a", "mc": "#eb6834"}
+ALGO_LABEL = {"ql": "Q-learning", "sarsa": "SARSA", "mc": "Monte Carlo ES"}
+ALGO_TICK = {"ql": "Q-learning", "sarsa": "SARSA", "mc": "MC ES"}
+OLD_COLOR = "#b8b6ae"
+PARCEL_COLOR = {"A": "#6250d6", "B": "#e87ba4", "C": "#008300", "D": "#1baf7a"}  # luon kem chu cai cua kien
 BOOST_COLOR = "#eda100"
-TITLE = {"S1": "S1 · 2 kiện độc lập, mang được 2", "S2": "S2 · 3 kiện, chỉ mang được 1",
-         "S3": "S3 · 3 kiện, kiện C có deadline 18 bước", "S4": "S4 · 3 kiện, có ô tăng tải ×2"}
-VARIANT_TITLE = {"S3_phat_tre_30": "Deadline 18, phạt trễ 30 (gốc)", "S3_phat_tre_0": "Deadline 18, phạt trễ 0",
-                 "S3_deadline_35": "Deadline 35, phạt trễ 30", "S4_co_tang_tai": "Có ô tăng tải (gốc)",
+TITLE = {"S1": "S1 · Cấp 1 (dễ): 2 kiện, mang được 2", "S2": "S2 · Cấp 2 (trung bình): 3 kiện, mang được 1",
+         "S3": "S3 · Cấp 3 (khó): kiện C có deadline 20 bước",
+         "S4": "S4 · Cấp 4 (rất khó): 4 kiện, ô ×2, D deadline 22"}
+VARIANT_TITLE = {"S3_phat_tre_30": "Deadline 20, phạt trễ 30 (gốc)", "S3_phat_tre_0": "Deadline 20, phạt trễ 0",
+                 "S3_deadline_45": "Deadline 45, phạt trễ 30", "S4_co_tang_tai": "Có ô tăng tải (gốc)",
                  "S4_khong_tang_tai": "Bỏ ô tăng tải"}
 # ban tieng Anh cua cac nhan tren (main() ghi de khi --lang en)
-ALGO_LABEL_EN = {"mc_long": "Monte Carlo, 4x episodes, slower ε decay"}
-TITLE_EN = {"S1": "S1 · 2 independent parcels, carry 2", "S2": "S2 · 3 parcels, carry only 1",
-            "S3": "S3 · 3 parcels, parcel C has an 18-step deadline", "S4": "S4 · 3 parcels, ×2 booster cell"}
-VARIANT_TITLE_EN = {"S3_phat_tre_30": "Deadline 18, late penalty 30 (base)",
-                    "S3_phat_tre_0": "Deadline 18, late penalty 0",
-                    "S3_deadline_35": "Deadline 35, late penalty 30", "S4_co_tang_tai": "With booster cell (base)",
+ALGO_LABEL_EN = {}
+TITLE_EN = {"S1": "S1 · Level 1 (easy): 2 parcels, carry 2", "S2": "S2 · Level 2 (medium): 3 parcels, carry 1",
+            "S3": "S3 · Level 3 (hard): parcel C has a 20-step deadline",
+            "S4": "S4 · Level 4 (very hard): 4 parcels, ×2 cell, D deadline 22"}
+VARIANT_TITLE_EN = {"S3_phat_tre_30": "Deadline 20, late penalty 30 (base)",
+                    "S3_phat_tre_0": "Deadline 20, late penalty 0",
+                    "S3_deadline_45": "Deadline 45, late penalty 30", "S4_co_tang_tai": "With booster cell (base)",
                     "S4_khong_tang_tai": "Booster cell removed"}
 EMPTY_PATH = "#8a8984"
 
@@ -74,6 +77,12 @@ def configs_by_name():
 
 def short(name):
     return name.split("_")[0]
+
+
+def kilo(ax):
+    """Truc x ghi 20k, 1.5M thay vi 20000, 1500000."""
+    ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(
+        lambda v, _: f"{v / 1e6:g}M" if abs(v) >= 1e6 else (f"{v / 1000:g}k" if abs(v) >= 1000 else f"{v:g}")))
 
 
 def save(fig, name):
@@ -144,13 +153,13 @@ def plot_maps(cfgs):
     for ax, (name, cfg) in zip(axes, cfgs.items()):
         env = MultiDeliveryEnv(cfg, "depot")
         draw_grid(ax, env)
-        extra = []
+        extra = [L(f"{env.N} kiện, sức chứa {env.capacity}", f"{env.N} parcels, capacity {env.capacity}")]
         if env.dl_idx is not None:
             pname = env.parcels[env.dl_idx]["name"]
-            extra.append(L(f"kiện {pname} deadline {env.deadline} bước", f"parcel {pname} deadline {env.deadline} steps"))
-        extra.append(L(f"sức chứa {env.capacity}", f"capacity {env.capacity}"))
-        ax.set_title(L(f"{short(name)} · lưới {env.H}x{env.W}", f"{short(name)} · {env.H}x{env.W} grid") + "\n"
-                     + ", ".join(extra), fontsize=10, color=INK)
+            extra.append(L(f"{pname} deadline {env.deadline}", f"{pname} deadline {env.deadline}"))
+        lv = cfg.get("level", "?")
+        ax.set_title(L(f"{short(name)} · cấp {lv} · lưới {env.H}x{env.W}", f"{short(name)} · level {lv} · {env.H}x{env.W} grid")
+                     + "\n" + ", ".join(extra), fontsize=10, color=INK)
     map_legend(fig)
     fig.suptitle(L("Bốn map, độ khó tăng dần", "Four maps of increasing difficulty"),
                  fontsize=13, fontweight="bold", color=INK)
@@ -180,8 +189,9 @@ def plot_state_space(summary):
     ax.set_ylim(50, max(full) * 4)
     ax.set_xticks(x, [short(n) for n in names])
     ax.set_ylabel(L("Số trạng thái (thang log)", "Number of states (log scale)"))
-    ax.set_title(L("Deadline nhân không gian trạng thái lên 19 lần (S3)",
-                   "The deadline multiplies the state space by 19 (S3)"), loc="left", color=INK)
+    ax.set_title(L("Số trạng thái tăng theo cấp độ (deadline và ô tăng tải nhân thêm chiều τ, b)",
+                   "State count grows with the level (deadline and booster add the τ, b dimensions)"),
+                 loc="left", color=INK)
     ax.legend(loc="upper left", fontsize=9)
     ax.grid(axis="x", visible=False)
     save(fig, "state_space.png")
@@ -197,18 +207,14 @@ def _curves(summary, metric, ylabel, title, fname, ylim=None, ref=None):
         data = np.load(os.path.join(RES, f"{name}.npz"))
         st = summary["settings"][name]
         for key in [k for k in ALGO_COLOR if f"{k}__eval_ep" in data]:
-            if metric == "train_len":
-                arr = data[f"{key}__train_len"].astype(float)
-                k = max(1, arr.shape[1] // 100)
-                arr = np.array([np.convolve(row, np.ones(k) / k, mode="valid") for row in arr])
-                xs = np.arange(arr.shape[1]) + k
-            else:
-                arr = data[f"{key}__{metric}"].astype(float)
-                xs = data[f"{key}__eval_ep"]
+            # train_len: trung binh so buoc cua cac episode giua 2 lan danh gia
+            arr = data[f"{key}__{metric}"].astype(float) * (100 if metric == "eval_acc" else 1)
+            xs = data[f"{key}__eval_ep"]
             m, s = arr.mean(0), arr.std(0)
             ax.plot(xs, m, color=ALGO_COLOR[key], lw=2, label=ALGO_LABEL[key])
             if metric != "eval_success":
-                ax.fill_between(xs, m - s, m + s, color=ALGO_COLOR[key], alpha=0.12, lw=0)
+                lo, hi = (np.clip(m - s, 0, 100), np.clip(m + s, 0, 100)) if metric == "eval_acc" else (m - s, m + s)
+                ax.fill_between(xs, lo, hi, color=ALGO_COLOR[key], alpha=0.12, lw=0)
         if ref == "optimal":
             y = st["optimal"]["return"]
             ax.axhline(y, color=INK2, lw=1)
@@ -219,8 +225,7 @@ def _curves(summary, metric, ylabel, title, fname, ylim=None, ref=None):
             ax.axhline(y, color=INK2, lw=1)
             ax.text(xs[-1], y, f"max_steps = {y}", ha="right", va="bottom", fontsize=9, color=INK2)
         ax.set_title(TITLE[short(name)], loc="left", fontsize=10, color=INK)
-        ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(
-            lambda v, _: f"{v / 1000:g}k" if abs(v) >= 1000 else f"{v:g}"))
+        kilo(ax)
         ax.set_xlabel("Episode")
         ax.set_ylabel(ylabel)
         if ylim:
@@ -338,26 +343,28 @@ def draw_route(ax, env, Q, title):
 
 
 def plot_variants(summary):
+    var = summary["variants"]
+    saved = var["S4_khong_tang_tai"]["optimal"]["steps"] - var["S4_co_tang_tai"]["optimal"]["steps"]
     groups = [("S3", "reward_deadline.png",
                L("S3: phạt trễ và độ dài deadline quyết định giao kiện C trước hay sau",
                  "S3: the late penalty and deadline length decide whether C is delivered first or last")),
               ("S4", "env_booster.png",
-               L("S4: có ô tăng tải thì robot mang 2 kiện một chuyến, ngắn hơn 8 bước",
-                 "S4: with the booster the robot carries 2 parcels in one trip, 8 steps shorter"))]
+               L(f"S4: có ô tăng tải thì robot mang 2 kiện một chuyến, ngắn hơn {saved} bước",
+                 f"S4: with the booster the robot carries 2 parcels in one trip, {saved} steps shorter"))]
     for prefix, fname, title in groups:
-        names = [v for v in summary["variants"] if v.startswith(prefix)]
+        names = [v for v in var if v.startswith(prefix)]
         fig, axes = plt.subplots(1, len(names), figsize=(4.2 * len(names), 4.8))
         for ax, v in zip(np.atleast_1d(axes), names):
-            meta = summary["variants"][v]
             cfg = load_config(os.path.join(RES, f"config_{v}.json"))
             env = MultiDeliveryEnv(cfg, "depot")
-            Q = np.load(os.path.join(RES, f"Q_variant_{v}.npy"))
-            draw_route(ax, env, Q, VARIANT_TITLE.get(v, meta["desc"]))
-        handles = [Line2D([], [], color=PARCEL_COLOR[k], lw=2.5, label=L(f"đang mang {k}", f"carrying {k}"))
-                   for k in "ABC"]
-        handles += [Line2D([], [], color=EMPTY_PATH, lw=2.5, label=L("tay không", "empty-handed")),
-                    Line2D([], [], color=INK, lw=2.5, label=L("mang 2 kiện", "carrying 2 parcels"))]
-        fig.legend(handles=handles, loc="lower center", ncol=5, bbox_to_anchor=(0.5, -0.03), fontsize=9)
+            Q = load_q(os.path.join(RES, f"Q_variant_{v}.npz"))
+            draw_route(ax, env, Q, VARIANT_TITLE.get(v, var[v]["desc"]))
+        handles = [Line2D([], [], color=PARCEL_COLOR[p["name"]], lw=2.5,
+                          label=L(f"đang mang {p['name']}", f"carrying {p['name']}")) for p in env.parcels]
+        handles.append(Line2D([], [], color=EMPTY_PATH, lw=2.5, label=L("tay không", "empty-handed")))
+        if env.booster or env.capacity > 1:
+            handles.append(Line2D([], [], color=INK, lw=2.5, label=L("mang 2 kiện", "carrying 2 parcels")))
+        fig.legend(handles=handles, loc="lower center", ncol=len(handles), bbox_to_anchor=(0.5, -0.03), fontsize=9)
         fig.suptitle(title + L(" (số tròn = thứ tự sự kiện lấy/giao)", " (circled numbers = order of pickups/drops)"),
                      fontsize=12, fontweight="bold", color=INK, x=0.01, ha="left")
         fig.tight_layout(rect=(0, 0.03, 1, 0.92))
@@ -389,12 +396,46 @@ def plot_final_bars(summary):
         ax.set_title(L(f"{short(name)} (tối ưu {opt:.0f})", f"{short(name)} (optimal {opt:.0f})"),
                      fontsize=10, color=INK)
         ax.grid(axis="x", visible=False)
-    axes[0].set_ylabel(L("Return policy cuối (5 seed)", "Final policy return (5 seeds)"))
+    n = len(summary["seeds"])
+    axes[0].set_ylabel(L(f"Return policy cuối ({n} seed)", f"Final policy return ({n} seeds)"))
     fig.suptitle(L("Return của policy cuối: cột = trung bình, chấm = từng seed, vạch ngang = tối ưu",
                    "Final policy return: bar = mean, dots = individual seeds, line = optimal"),
                  fontsize=12, fontweight="bold", color=INK, x=0.01, ha="left")
     fig.tight_layout()
     save(fig, "final_returns.png")
+
+
+def plot_ablation(summary):
+    """Do chinh xac cuoi: cau hinh cu (xam) va cau hinh moi (mau thuat toan), cung so episode."""
+    names = list(summary["settings"])
+    if not summary["settings"][names[0]].get("baseline"):
+        return
+    fig, axes = plt.subplots(1, len(ALGO_COLOR), figsize=(13, 4.1), sharey=True)
+    x, w = np.arange(len(names)), 0.36
+    for ax, key in zip(axes, ALGO_COLOR):
+        for dx, group, k, color, lab in [(-w / 2 - 0.01, "baseline", f"{key}_cu", OLD_COLOR, L("cũ", "old")),
+                                         (w / 2 + 0.01, "algos", key, ALGO_COLOR[key], L("mới", "new"))]:
+            accs = [100 * np.array(summary["settings"][n][group][k]["accuracy"]) for n in names]
+            ax.bar(x + dx, [a.mean() for a in accs], w, color=color)
+            for i, a in enumerate(accs):
+                ax.scatter(np.full(len(a), x[i] + dx) + np.linspace(-0.08, 0.08, len(a)), a,
+                           s=10, color=INK, zorder=5)
+                ax.text(x[i] + dx, max(a.mean(), a.max()) + 3, f"{a.mean():.0f}", ha="center", fontsize=8.5,
+                        color=INK)  # dat tren ca cot lan cac cham de khong de len nhau
+        ax.set_xticks(x, [short(n) for n in names])
+        ax.set_ylim(0, 114)
+        ax.set_title(ALGO_LABEL[key], loc="left", fontsize=10.5, color=INK)
+        ax.grid(axis="x", visible=False)
+    axes[0].set_ylabel(L("% ô xuất phát đi đúng lộ trình tối ưu", "% start cells on an optimal route"))
+    handles = [Rectangle((0, 0), 1, 1, fc=OLD_COLOR, label=L("Cấu hình cũ", "Old settings"))]
+    handles += [Rectangle((0, 0), 1, 1, fc=ALGO_COLOR[k], label=L(f"{ALGO_LABEL[k]}, cấu hình mới", f"{ALGO_LABEL[k]}, new settings"))
+                for k in ALGO_COLOR]
+    fig.legend(handles=handles, loc="lower center", ncol=len(handles), bbox_to_anchor=(0.5, -0.03), fontsize=9.5)
+    fig.suptitle(L("Độ chính xác trước và sau cải tiến (cùng số episode; cột = trung bình, chấm = từng seed)",
+                   "Accuracy before and after the improvements (same episodes; bar = mean, dots = seeds)"),
+                 fontsize=12, fontweight="bold", color=INK, x=0.01, ha="left")
+    fig.tight_layout(rect=(0, 0.06, 1, 1))
+    save(fig, "ablation.png")
 
 
 def main():
@@ -417,17 +458,22 @@ def main():
             L("Đường học: return của policy tham lam từ ô S (trung bình ± độ lệch chuẩn 5 seed; trục y cắt ở −1,15·max_steps)",
               "Learning curves: greedy policy return from S (mean ± std over 5 seeds; y-axis cut at −1.15·max_steps)"),
             "learning_curves.png", ref="optimal")
+    _curves(summary, "eval_acc", L("% ô xuất phát đi đúng lộ trình tối ưu", "% start cells on an optimal route"),
+            L("Độ chính xác: % ô xuất phát mà policy tham lam đạt return tối ưu (trung bình ± độ lệch chuẩn các seed)",
+              "Accuracy: % start cells where the greedy policy reaches the optimal return (mean ± std over seeds)"),
+            "accuracy.png", ylim=(-3, 103))
     _curves(summary, "eval_success", L("Tỉ lệ seed giao đủ hàng", "Fraction of seeds delivering all"),
             L("Tỉ lệ seed mà policy tham lam giao đủ mọi kiện",
               "Fraction of seeds whose greedy policy delivers every parcel"), "success_rate.png", ylim=(-0.05, 1.05))
-    _curves(summary, "train_len", L("Số bước / episode (trung bình trượt)", "Steps / episode (moving average)"),
-            L("Độ dài episode khi huấn luyện: Q-learning rút ngắn nhanh, Monte Carlo chậm hơn và kẹt ở S4",
-              "Training episode length: Q-learning shortens fast, Monte Carlo is slower and stuck on S4"),
+    _curves(summary, "train_len", L("Số bước / episode", "Steps / episode"),
+            L("Độ dài episode khi huấn luyện (trung bình giữa 2 lần đánh giá)",
+              "Training episode length (mean between two evaluations)"),
             "episode_length.png", ref="max_steps")
     plot_final_bars(summary)
+    plot_ablation(summary)
     for name, tag in [("S2_3_kien_suc_chua_1", "S2"), ("S4_o_tang_tai", "S4"), ("S3_kien_deadline", "S3")]:
-        best = cfgs[name]["train"]["best_ql"]
-        Q = np.load(os.path.join(RES, f"Q_{name}_{best}.npy"))
+        best = cfgs[name]["train"]["best"]
+        Q = load_q(os.path.join(RES, f"Q_{name}_{best}.npz"))
         plot_policy(cfgs[name], Q, f"policy_{tag}.png", f"{tag} · {ALGO_LABEL[best]}")
     plot_variants(summary)
 

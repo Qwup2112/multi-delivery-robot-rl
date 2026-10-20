@@ -1,20 +1,20 @@
 {
   "name": "S2_3_kien_suc_chua_1",
-  "title": "S2: 3 kien, chi mang duoc 1",
-  "grid": ["S..#.",
-           ".#...",
-           ".#.#.",
-           "...#.",
-           "#...."],
+  "level": 2,
+  "title": "S2 - Cap 2 (trung binh): 3 kien, chi mang duoc 1",
+  "grid": ["S..#..",
+           ".#...#",
+           ".#.#..",
+           "...#..",
+           "##....",
+           "......"],
   "capacity": 1,
   "parcels": [
-    {"name": "A", "pickup": [0, 4], "drop": [3, 0], "reward": 20},
-    {"name": "B", "pickup": [4, 1], "drop": [1, 2], "reward": 20},
-    {"name": "C", "pickup": [2, 2], "drop": [4, 4], "reward": 20}
+    {"name": "A", "pickup": [0, 4], "drop": [5, 0], "reward": 20},
+    {"name": "B", "pickup": [3, 0], "drop": [1, 4], "reward": 20},
+    {"name": "C", "pickup": [5, 5], "drop": [2, 2], "reward": 20}
   ],
   "rewards": {"step": -1, "illegal": -10, "late_penalty": 0},
   "max_steps": 150,
-  "train": {"episodes": 40000, "gamma": 0.99, "alpha_ql": 0.5, "start_mode": "random_cell",
-            "eps_start": 1.0, "eps_end": 0.05, "decay_frac": 0.7, "eval_every": 200,
-            "best_ql": "ql_opt", "mc_long": true}
+  "train": {"episodes": 300000, "gamma": 0.99, "best": "ql"}
 }

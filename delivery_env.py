@@ -12,6 +12,7 @@ import json
 from collections import deque
 
 import gymnasium as gym
+import numpy as np
 from gymnasium import spaces
 
 # ----- Hanh dong -----
@@ -78,7 +79,9 @@ class MultiDeliveryEnv(gym.Env):
                            if (r, c) not in self.walls and (r, c) != self.booster]
         self.state = None
         self.t = 0
-        self._start_pool = None  # tinh luoi khi can (exploring starts)
+        self._reach = None   # tap trang thai dat toi (tinh luoi khi can)
+        self._tables = None  # bang chuyen trang thai (NS, R, D) cho huan luyen nhanh
+        self._pools = {}     # start_mode -> mang trang thai xuat phat
 
     def _find(self, ch):
         for r, row in enumerate(self.grid):
@@ -169,18 +172,53 @@ class MultiDeliveryEnv(gym.Env):
 
     def reachable_states(self):
         """BFS tu moi o xuat phat -> tap trang thai co the gap khi chay."""
-        starts = [(r, c, (WAITING,) * self.N, 0, 0) for (r, c) in self.free_cells]
-        seen = set(starts)
-        queue = deque(starts)
-        while queue:
-            s = queue.popleft()
-            for a in range(6):
-                ns, _, done, _ = self.transition(s, a)
-                if ns not in seen:
-                    seen.add(ns)
-                    if not done:
-                        queue.append(ns)
-        return seen
+        if self._reach is None:
+            starts = [(r, c, (WAITING,) * self.N, 0, 0) for (r, c) in self.free_cells]
+            seen = set(starts)
+            queue = deque(starts)
+            while queue:
+                s = queue.popleft()
+                for a in range(6):
+                    ns, _, done, _ = self.transition(s, a)
+                    if ns not in seen:
+                        seen.add(ns)
+                        if not done:
+                            queue.append(ns)
+            self._reach = seen
+        return self._reach
+
+    def tables(self):
+        """Lap san ham chuyen cho moi (trang thai dat toi, hanh dong) -> 3 mang (n_states x 6):
+            NS[s, a] = trang thai ke tiep, R[s, a] = reward, D[s, a] = True neu giao het hang.
+        Moi truong tat dinh nen 3 mang nay chua TOAN BO luat choi; agents.py chi tra bang
+        thay vi goi transition() moi buoc -> huan luyen nhanh hon rat nhieu (va chay duoc bang numba).
+        Trang thai khong dat toi giu NS = chinh no va khong bao gio duoc dung toi."""
+        if self._tables is None:
+            NS = np.repeat(np.arange(self.n_states, dtype=np.int32), 6).reshape(-1, 6)
+            R = np.zeros((self.n_states, 6))
+            D = np.zeros((self.n_states, 6), dtype=np.bool_)
+            for st in self.reachable_states():
+                if all(x == DELIVERED for x in st[2]):
+                    continue
+                s = self.encode(st)
+                for a in range(6):
+                    ns, r, done, _ = self.transition(st, a)
+                    NS[s, a], R[s, a], D[s, a] = self.encode(ns), r, done
+            self._tables = (NS, R, D)
+        return self._tables
+
+    def start_states(self, mode=None):
+        """Mang cac trang thai (da ma hoa) co the dung de bat dau episode theo start_mode."""
+        mode = mode or self.start_mode
+        if mode not in self._pools:
+            if mode == "exploring":  # moi trang thai dat toi chua giao het hang (exploring starts)
+                pool = sorted(s for s in self.reachable_states() if not all(x == DELIVERED for x in s[2]))
+            elif mode == "random_cell":
+                pool = [(r, c, (WAITING,) * self.N, 0, 0) for (r, c) in self.free_cells]
+            else:
+                pool = [(*self.depot, (WAITING,) * self.N, 0, 0)]
+            self._pools[mode] = np.array([self.encode(s) for s in pool], dtype=np.int32)
+        return self._pools[mode]
 
     def _parcel_here(self, status, pos, need, key):
         for i, p in enumerate(self.parcels):
@@ -198,10 +236,8 @@ class MultiDeliveryEnv(gym.Env):
             r, c = options["start"]
             self.state = (r, c, (WAITING,) * self.N, 0, 0)
         elif self.start_mode == "exploring":
-            if self._start_pool is None:
-                self._start_pool = sorted(s for s in self.reachable_states()
-                                          if not all(x == DELIVERED for x in s[2]))
-            self.state = self._start_pool[self.np_random.integers(len(self._start_pool))]
+            pool = self.start_states("exploring")
+            self.state = self.decode(int(pool[self.np_random.integers(len(pool))]))
         else:
             if self.start_mode == "random_cell":
                 r, c = self.free_cells[self.np_random.integers(len(self.free_cells))]

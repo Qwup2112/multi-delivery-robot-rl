@@ -3,11 +3,12 @@ demo.py - Chay MOT episode bang policy da hoc va in tung buoc ra man hinh.
 
     python demo.py                                         # mac dinh: S4, bien the Q-learning tot nhat
     python demo.py --config configs/s2_three_parcels.json  # chon map khac
-    python demo.py --algo mc                               # xem policy cua Monte Carlo
+    python demo.py --algo sarsa                            # xem policy cua SARSA (ql | sarsa | mc)
     python demo.py --gif                                   # luu them anh dong figures/demo_<map>.gif
     python demo.py --gif --lang en                         # anh dong chu tieng Anh, luu vao figures_en/
 
-Neu chua co bang Q trong results/ (chua chay experiments.py), demo tu huan luyen nhanh bang Q-learning.
+Neu chua co bang Q trong results/ (chua chay experiments.py), demo tu huan luyen thuat toan da chon
+(cung tham so voi experiments.py, 1 seed).
 """
 import argparse
 import os
@@ -16,22 +17,19 @@ import time
 
 import numpy as np
 
-from agents import q_learning, run_greedy
+from agents import load_q, run_greedy
 from delivery_env import ACTION_NAMES, MultiDeliveryEnv, load_config
 
 
 def get_q(cfg, algo):
-    path = os.path.join("results", f"Q_{cfg['name']}_{algo}.npy")
+    path = os.path.join("results", f"Q_{cfg['name']}_{algo}.npz")
     if os.path.exists(path):
         print(f"Doc bang Q tu {path}")
-        return np.load(path)
-    tr = cfg["train"]
-    print(f"Chua co {path} -> huan luyen nhanh Q-learning {tr['episodes']} episode...")
-    env = MultiDeliveryEnv(cfg, tr["start_mode"])
-    ev = MultiDeliveryEnv(cfg, "depot")
-    Q, _ = q_learning(env, ev, tr["episodes"], alpha=tr["alpha_ql"], gamma=tr["gamma"],
-                      eps_end=tr["eps_end"], decay_frac=tr["decay_frac"], eval_every=10**9,
-                      q_init=30.0 if algo == "ql_opt" else 0.0)
+        return load_q(path)
+    from experiments import build_run
+    fn, env, ev, kw = build_run(cfg, algo, seed=0)
+    print(f"Chua co {path} -> huan luyen nhanh {algo}, {kw['n_episodes']} episode...")
+    Q, _ = fn(env, ev, **kw)
     return Q
 
 
@@ -93,13 +91,13 @@ def save_gif(cfg, Q, path, lang="vi"):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--config", default="configs/s4_booster.json")
-    ap.add_argument("--algo", default=None, help="ql_opt | ql_q0 | mc (mac dinh: best_ql trong config)")
+    ap.add_argument("--algo", default=None, help="ql | sarsa | mc (mac dinh: best trong config)")
     ap.add_argument("--delay", type=float, default=0.0, help="so giay nghi giua cac buoc")
     ap.add_argument("--gif", action="store_true")
     ap.add_argument("--lang", choices=["vi", "en"], default="vi", help="ngon ngu chu tren anh dong (en -> figures_en/)")
     args = ap.parse_args()
     cfg = load_config(args.config)
-    algo = args.algo or cfg["train"]["best_ql"]
+    algo = args.algo or cfg["train"]["best"]
     Q = get_q(cfg, algo)
     play(cfg, Q, args.delay)
     if args.gif:

@@ -6,9 +6,11 @@
   3,
   4
  ],
+ "scale": 1.0,
  "settings": {
   "S1_2_kien_doc_lap": {
-   "title": "S1: 2 kien doc lap (mang duoc 2)",
+   "title": "S1 - Cap 1 (de): 2 kien doc lap, mang duoc 2",
+   "level": 1,
    "grid": "5x5",
    "n_parcels": 2,
    "capacity": 2,
@@ -26,79 +28,35 @@
     "order": "A-B",
     "late": false
    },
-   "episodes": 20000,
+   "episodes": 100000,
    "algos": {
-    "ql_q0": {
-     "label": "Q-learning (Q0 = 0)",
-     "final_return_mean": 16.0,
-     "final_return_std": 0.0,
-     "success_rate": 1.0,
-     "optimal_rate": 0.0,
-     "first_optimal_episode": [
-      1400,
-      1500,
-      null,
-      null,
-      null
-     ],
-     "final_steps": [
-      24,
-      24,
-      24,
-      24,
-      24
-     ],
-     "final_routes": [
-      {
-       "return": 16.0,
-       "steps": 24,
-       "success": true,
-       "order": "B-A",
-       "late": false
-      },
-      {
-       "return": 16.0,
-       "steps": 24,
-       "success": true,
-       "order": "B-A",
-       "late": false
-      },
-      {
-       "return": 16.0,
-       "steps": 24,
-       "success": true,
-       "order": "B-A",
-       "late": false
-      },
-      {
-       "return": 16.0,
-       "steps": 24,
-       "success": true,
-       "order": "B-A",
-       "late": false
-      },
-      {
-       "return": 16.0,
-       "steps": 24,
-       "success": true,
-       "order": "B-A",
-       "late": false
-      }
-     ],
-     "time_mean_s": 14.318794298171998
-    },
-    "ql_opt": {
-     "label": "Q-learning (Q0 = 30, lac quan)",
+    "ql": {
+     "label": "Q-learning",
      "final_return_mean": 18.0,
      "final_return_std": 0.0,
      "success_rate": 1.0,
      "optimal_rate": 1.0,
+     "accuracy": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "accuracy_mean": 1.0,
      "first_optimal_episode": [
-      2500,
-      2600,
-      2500,
-      2500,
-      2700
+      500,
+      500,
+      500,
+      500,
+      500
+     ],
+     "first_full_accuracy_episode": [
+      500,
+      500,
+      500,
+      500,
+      500
      ],
      "final_steps": [
       22,
@@ -144,79 +102,109 @@
        "late": false
       }
      ],
-     "time_mean_s": 14.040632009506226
+     "time_mean_s": 0.15420432090759278
+    },
+    "sarsa": {
+     "label": "SARSA",
+     "final_return_mean": 18.0,
+     "final_return_std": 0.0,
+     "success_rate": 1.0,
+     "optimal_rate": 1.0,
+     "accuracy": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "accuracy_mean": 1.0,
+     "first_optimal_episode": [
+      20500,
+      24500,
+      2500,
+      3500,
+      19500
+     ],
+     "first_full_accuracy_episode": [
+      20500,
+      33500,
+      5500,
+      31000,
+      27500
+     ],
+     "final_steps": [
+      22,
+      22,
+      22,
+      22,
+      22
+     ],
+     "final_routes": [
+      {
+       "return": 18.0,
+       "steps": 22,
+       "success": true,
+       "order": "A-B",
+       "late": false
+      },
+      {
+       "return": 18.0,
+       "steps": 22,
+       "success": true,
+       "order": "A-B",
+       "late": false
+      },
+      {
+       "return": 18.0,
+       "steps": 22,
+       "success": true,
+       "order": "A-B",
+       "late": false
+      },
+      {
+       "return": 18.0,
+       "steps": 22,
+       "success": true,
+       "order": "A-B",
+       "late": false
+      },
+      {
+       "return": 18.0,
+       "steps": 22,
+       "success": true,
+       "order": "A-B",
+       "late": false
+      }
+     ],
+     "time_mean_s": 0.09888696670532227
     },
     "mc": {
-     "label": "Monte Carlo first-visit",
-     "final_return_mean": 16.8,
-     "final_return_std": 0.9797958971132713,
-     "success_rate": 1.0,
-     "optimal_rate": 0.4,
-     "first_optimal_episode": [
-      null,
-      3500,
-      null,
-      3700,
-      null
-     ],
-     "final_steps": [
-      24,
-      22,
-      24,
-      22,
-      24
-     ],
-     "final_routes": [
-      {
-       "return": 16.0,
-       "steps": 24,
-       "success": true,
-       "order": "A-B",
-       "late": false
-      },
-      {
-       "return": 18.0,
-       "steps": 22,
-       "success": true,
-       "order": "A-B",
-       "late": false
-      },
-      {
-       "return": 16.0,
-       "steps": 24,
-       "success": true,
-       "order": "B-A",
-       "late": false
-      },
-      {
-       "return": 18.0,
-       "steps": 22,
-       "success": true,
-       "order": "A-B",
-       "late": false
-      },
-      {
-       "return": 16.0,
-       "steps": 24,
-       "success": true,
-       "order": "B-A",
-       "late": false
-      }
-     ],
-     "time_mean_s": 9.629099941253662
-    },
-    "mc_long": {
-     "label": "Monte Carlo, 4x episode, eps giam cham",
+     "label": "Monte Carlo ES",
      "final_return_mean": 18.0,
      "final_return_std": 0.0,
      "success_rate": 1.0,
      "optimal_rate": 1.0,
+     "accuracy": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "accuracy_mean": 1.0,
      "first_optimal_episode": [
-      14800,
-      15200,
-      14000,
-      13200,
-      20400
+      7000,
+      7000,
+      9000,
+      9500,
+      6500
+     ],
+     "first_full_accuracy_episode": [
+      7000,
+      7000,
+      9000,
+      9500,
+      7000
      ],
      "final_steps": [
       22,
@@ -262,415 +250,576 @@
        "late": false
       }
      ],
-     "time_mean_s": 51.22745571136475
+     "time_mean_s": 0.1087977409362793
+    }
+   },
+   "baseline": {
+    "ql_cu": {
+     "label": "Q-learning (cau hinh cu)",
+     "final_return_mean": 18.0,
+     "final_return_std": 0.0,
+     "success_rate": 1.0,
+     "optimal_rate": 1.0,
+     "accuracy": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "accuracy_mean": 1.0,
+     "first_optimal_episode": [
+      10000,
+      8500,
+      3500,
+      14000,
+      13500
+     ],
+     "first_full_accuracy_episode": [
+      10000,
+      8500,
+      3500,
+      14000,
+      13500
+     ],
+     "final_steps": [
+      22,
+      22,
+      22,
+      22,
+      22
+     ],
+     "final_routes": [
+      {
+       "return": 18.0,
+       "steps": 22,
+       "success": true,
+       "order": "A-B",
+       "late": false
+      },
+      {
+       "return": 18.0,
+       "steps": 22,
+       "success": true,
+       "order": "A-B",
+       "late": false
+      },
+      {
+       "return": 18.0,
+       "steps": 22,
+       "success": true,
+       "order": "A-B",
+       "late": false
+      },
+      {
+       "return": 18.0,
+       "steps": 22,
+       "success": true,
+       "order": "A-B",
+       "late": false
+      },
+      {
+       "return": 18.0,
+       "steps": 22,
+       "success": true,
+       "order": "A-B",
+       "late": false
+      }
+     ],
+     "time_mean_s": 0.2902057647705078
+    },
+    "sarsa_cu": {
+     "label": "SARSA (cau hinh cu)",
+     "final_return_mean": -53.6,
+     "final_return_std": 56.82816203256973,
+     "success_rate": 0.4,
+     "optimal_rate": 0.0,
+     "accuracy": [
+      0.6956521739130435,
+      0.9565217391304348,
+      0.0,
+      0.6956521739130435,
+      0.43478260869565216
+     ],
+     "accuracy_mean": 0.5565217391304348,
+     "first_optimal_episode": [
+      22000,
+      6000,
+      15500,
+      6500,
+      17500
+     ],
+     "first_full_accuracy_episode": [
+      null,
+      76000,
+      null,
+      62500,
+      67000
+     ],
+     "final_steps": [
+      24,
+      24,
+      100,
+      100,
+      100
+     ],
+     "final_routes": [
+      {
+       "return": 16.0,
+       "steps": 24,
+       "success": true,
+       "order": "B-A",
+       "late": false
+      },
+      {
+       "return": 16.0,
+       "steps": 24,
+       "success": true,
+       "order": "B-A",
+       "late": false
+      },
+      {
+       "return": -100.0,
+       "steps": 100,
+       "success": false,
+       "order": "",
+       "late": false
+      },
+      {
+       "return": -100.0,
+       "steps": 100,
+       "success": false,
+       "order": "",
+       "late": false
+      },
+      {
+       "return": -100.0,
+       "steps": 100,
+       "success": false,
+       "order": "",
+       "late": false
+      }
+     ],
+     "time_mean_s": 0.2634211540222168
+    },
+    "mc_cu": {
+     "label": "Monte Carlo (cau hinh cu)",
+     "final_return_mean": 18.0,
+     "final_return_std": 0.0,
+     "success_rate": 1.0,
+     "optimal_rate": 1.0,
+     "accuracy": [
+      1.0,
+      0.9130434782608695,
+      0.9565217391304348,
+      1.0,
+      1.0
+     ],
+     "accuracy_mean": 0.9739130434782609,
+     "first_optimal_episode": [
+      15000,
+      14500,
+      15500,
+      14000,
+      15500
+     ],
+     "first_full_accuracy_episode": [
+      15500,
+      null,
+      null,
+      16000,
+      16000
+     ],
+     "final_steps": [
+      22,
+      22,
+      22,
+      22,
+      22
+     ],
+     "final_routes": [
+      {
+       "return": 18.0,
+       "steps": 22,
+       "success": true,
+       "order": "A-B",
+       "late": false
+      },
+      {
+       "return": 18.0,
+       "steps": 22,
+       "success": true,
+       "order": "A-B",
+       "late": false
+      },
+      {
+       "return": 18.0,
+       "steps": 22,
+       "success": true,
+       "order": "A-B",
+       "late": false
+      },
+      {
+       "return": 18.0,
+       "steps": 22,
+       "success": true,
+       "order": "A-B",
+       "late": false
+      },
+      {
+       "return": 18.0,
+       "steps": 22,
+       "success": true,
+       "order": "A-B",
+       "late": false
+      }
+     ],
+     "time_mean_s": 0.2982636451721191
     }
    }
   },
   "S2_3_kien_suc_chua_1": {
-   "title": "S2: 3 kien, chi mang duoc 1",
-   "grid": "5x5",
-   "n_parcels": 3,
-   "capacity": 1,
-   "n_pos": 25,
-   "n_codes": 27,
-   "n_tau": 1,
-   "n_boost": 1,
-   "n_states": 675,
-   "n_reachable": 364,
-   "n_actions": 6,
-   "optimal": {
-    "return": 29.0,
-    "steps": 31,
-    "success": true,
-    "order": "C-B-A",
-    "late": false
-   },
-   "episodes": 40000,
-   "algos": {
-    "ql_q0": {
-     "label": "Q-learning (Q0 = 0)",
-     "final_return_mean": 29.0,
-     "final_return_std": 0.0,
-     "success_rate": 1.0,
-     "optimal_rate": 1.0,
-     "first_optimal_episode": [
-      3200,
-      2800,
-      3400,
-      3000,
-      3000
-     ],
-     "final_steps": [
-      31,
-      31,
-      31,
-      31,
-      31
-     ],
-     "final_routes": [
-      {
-       "return": 29.0,
-       "steps": 31,
-       "success": true,
-       "order": "C-B-A",
-       "late": false
-      },
-      {
-       "return": 29.0,
-       "steps": 31,
-       "success": true,
-       "order": "C-B-A",
-       "late": false
-      },
-      {
-       "return": 29.0,
-       "steps": 31,
-       "success": true,
-       "order": "C-B-A",
-       "late": false
-      },
-      {
-       "return": 29.0,
-       "steps": 31,
-       "success": true,
-       "order": "C-B-A",
-       "late": false
-      },
-      {
-       "return": 29.0,
-       "steps": 31,
-       "success": true,
-       "order": "C-B-A",
-       "late": false
-      }
-     ],
-     "time_mean_s": 38.33246521949768
-    },
-    "ql_opt": {
-     "label": "Q-learning (Q0 = 30, lac quan)",
-     "final_return_mean": 29.0,
-     "final_return_std": 0.0,
-     "success_rate": 1.0,
-     "optimal_rate": 1.0,
-     "first_optimal_episode": [
-      5200,
-      5000,
-      5000,
-      5200,
-      5000
-     ],
-     "final_steps": [
-      31,
-      31,
-      31,
-      31,
-      31
-     ],
-     "final_routes": [
-      {
-       "return": 29.0,
-       "steps": 31,
-       "success": true,
-       "order": "C-B-A",
-       "late": false
-      },
-      {
-       "return": 29.0,
-       "steps": 31,
-       "success": true,
-       "order": "C-B-A",
-       "late": false
-      },
-      {
-       "return": 29.0,
-       "steps": 31,
-       "success": true,
-       "order": "C-B-A",
-       "late": false
-      },
-      {
-       "return": 29.0,
-       "steps": 31,
-       "success": true,
-       "order": "C-B-A",
-       "late": false
-      },
-      {
-       "return": 29.0,
-       "steps": 31,
-       "success": true,
-       "order": "C-B-A",
-       "late": false
-      }
-     ],
-     "time_mean_s": 38.07523045539856
-    },
-    "mc": {
-     "label": "Monte Carlo first-visit",
-     "final_return_mean": -78.4,
-     "final_return_std": 87.69173279163778,
-     "success_rate": 0.4,
-     "optimal_rate": 0.4,
-     "first_optimal_episode": [
-      null,
-      11400,
-      null,
-      null,
-      7800
-     ],
-     "final_steps": [
-      150,
-      31,
-      150,
-      150,
-      31
-     ],
-     "final_routes": [
-      {
-       "return": -150.0,
-       "steps": 150,
-       "success": false,
-       "order": "",
-       "late": false
-      },
-      {
-       "return": 29.0,
-       "steps": 31,
-       "success": true,
-       "order": "B-C-A",
-       "late": false
-      },
-      {
-       "return": -150.0,
-       "steps": 150,
-       "success": false,
-       "order": "",
-       "late": false
-      },
-      {
-       "return": -150.0,
-       "steps": 150,
-       "success": false,
-       "order": "",
-       "late": false
-      },
-      {
-       "return": 29.0,
-       "steps": 31,
-       "success": true,
-       "order": "C-B-A",
-       "late": false
-      }
-     ],
-     "time_mean_s": 39.409078407287595
-    },
-    "mc_long": {
-     "label": "Monte Carlo, 4x episode, eps giam cham",
-     "final_return_mean": -42.6,
-     "final_return_std": 87.69173279163778,
-     "success_rate": 0.6,
-     "optimal_rate": 0.6,
-     "first_optimal_episode": [
-      null,
-      29600,
-      28000,
-      null,
-      28800
-     ],
-     "final_steps": [
-      150,
-      31,
-      31,
-      150,
-      31
-     ],
-     "final_routes": [
-      {
-       "return": -150.0,
-       "steps": 150,
-       "success": false,
-       "order": "",
-       "late": false
-      },
-      {
-       "return": 29.0,
-       "steps": 31,
-       "success": true,
-       "order": "C-B-A",
-       "late": false
-      },
-      {
-       "return": 29.0,
-       "steps": 31,
-       "success": true,
-       "order": "C-B-A",
-       "late": false
-      },
-      {
-       "return": -150.0,
-       "steps": 150,
-       "success": false,
-       "order": "",
-       "late": false
-      },
-      {
-       "return": 29.0,
-       "steps": 31,
-       "success": true,
-       "order": "C-B-A",
-       "late": false
-      }
-     ],
-     "time_mean_s": 161.35466289520264
-    }
-   }
-  },
-  "S3_kien_deadline": {
-   "title": "S3: 3 kien, kien C co deadline 18 buoc",
+   "title": "S2 - Cap 2 (trung binh): 3 kien, chi mang duoc 1",
+   "level": 2,
    "grid": "6x6",
    "n_parcels": 3,
    "capacity": 1,
    "n_pos": 36,
    "n_codes": 27,
-   "n_tau": 19,
+   "n_tau": 1,
    "n_boost": 1,
-   "n_states": 18468,
-   "n_reachable": 2825,
+   "n_states": 972,
+   "n_reachable": 535,
    "n_actions": 6,
    "optimal": {
-    "return": 22.0,
-    "steps": 38,
+    "return": 24.0,
+    "steps": 36,
     "success": true,
-    "order": "C-B-A",
+    "order": "B-A-C",
     "late": false
    },
-   "episodes": 100000,
+   "episodes": 300000,
    "algos": {
-    "ql_q0": {
-     "label": "Q-learning (Q0 = 0)",
-     "final_return_mean": 21.4,
-     "final_return_std": 0.4898979485566356,
-     "success_rate": 1.0,
-     "optimal_rate": 0.4,
-     "first_optimal_episode": [
-      22000,
-      null,
-      null,
-      30500,
-      null
-     ],
-     "final_steps": [
-      38,
-      39,
-      39,
-      38,
-      39
-     ],
-     "final_routes": [
-      {
-       "return": 22.0,
-       "steps": 38,
-       "success": true,
-       "order": "C-B-A",
-       "late": false
-      },
-      {
-       "return": 21.0,
-       "steps": 39,
-       "success": true,
-       "order": "C-B-A",
-       "late": false
-      },
-      {
-       "return": 21.0,
-       "steps": 39,
-       "success": true,
-       "order": "C-B-A",
-       "late": false
-      },
-      {
-       "return": 22.0,
-       "steps": 38,
-       "success": true,
-       "order": "C-B-A",
-       "late": false
-      },
-      {
-       "return": 21.0,
-       "steps": 39,
-       "success": true,
-       "order": "C-B-A",
-       "late": false
-      }
-     ],
-     "time_mean_s": 127.67693300247193
-    },
-    "ql_opt": {
-     "label": "Q-learning (Q0 = 30, lac quan)",
-     "final_return_mean": 22.0,
+    "ql": {
+     "label": "Q-learning",
+     "final_return_mean": 24.0,
      "final_return_std": 0.0,
      "success_rate": 1.0,
      "optimal_rate": 1.0,
+     "accuracy": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "accuracy_mean": 1.0,
      "first_optimal_episode": [
-      71000,
-      73500,
-      72000,
-      74000,
-      75500
+      1500,
+      1500,
+      1500,
+      1500,
+      1500
+     ],
+     "first_full_accuracy_episode": [
+      3000,
+      3000,
+      1500,
+      1500,
+      1500
      ],
      "final_steps": [
-      38,
-      38,
-      38,
-      38,
-      38
+      36,
+      36,
+      36,
+      36,
+      36
      ],
      "final_routes": [
       {
-       "return": 22.0,
-       "steps": 38,
+       "return": 24.0,
+       "steps": 36,
        "success": true,
-       "order": "C-B-A",
+       "order": "B-A-C",
        "late": false
       },
       {
-       "return": 22.0,
-       "steps": 38,
+       "return": 24.0,
+       "steps": 36,
        "success": true,
-       "order": "C-B-A",
+       "order": "B-A-C",
        "late": false
       },
       {
-       "return": 22.0,
-       "steps": 38,
+       "return": 24.0,
+       "steps": 36,
        "success": true,
-       "order": "C-B-A",
+       "order": "B-A-C",
        "late": false
       },
       {
-       "return": 22.0,
-       "steps": 38,
+       "return": 24.0,
+       "steps": 36,
        "success": true,
-       "order": "C-B-A",
+       "order": "B-A-C",
        "late": false
       },
       {
-       "return": 22.0,
-       "steps": 38,
+       "return": 24.0,
+       "steps": 36,
        "success": true,
-       "order": "C-B-A",
+       "order": "B-A-C",
        "late": false
       }
      ],
-     "time_mean_s": 121.73847508430481
+     "time_mean_s": 0.6826639652252198
+    },
+    "sarsa": {
+     "label": "SARSA",
+     "final_return_mean": 24.0,
+     "final_return_std": 0.0,
+     "success_rate": 1.0,
+     "optimal_rate": 1.0,
+     "accuracy": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "accuracy_mean": 1.0,
+     "first_optimal_episode": [
+      19500,
+      22500,
+      37500,
+      24000,
+      19500
+     ],
+     "first_full_accuracy_episode": [
+      64500,
+      99000,
+      123000,
+      90000,
+      159000
+     ],
+     "final_steps": [
+      36,
+      36,
+      36,
+      36,
+      36
+     ],
+     "final_routes": [
+      {
+       "return": 24.0,
+       "steps": 36,
+       "success": true,
+       "order": "B-A-C",
+       "late": false
+      },
+      {
+       "return": 24.0,
+       "steps": 36,
+       "success": true,
+       "order": "B-A-C",
+       "late": false
+      },
+      {
+       "return": 24.0,
+       "steps": 36,
+       "success": true,
+       "order": "B-A-C",
+       "late": false
+      },
+      {
+       "return": 24.0,
+       "steps": 36,
+       "success": true,
+       "order": "B-A-C",
+       "late": false
+      },
+      {
+       "return": 24.0,
+       "steps": 36,
+       "success": true,
+       "order": "B-A-C",
+       "late": false
+      }
+     ],
+     "time_mean_s": 0.40704774856567383
     },
     "mc": {
-     "label": "Monte Carlo first-visit",
-     "final_return_mean": -22.0,
-     "final_return_std": 6.131883886702357,
+     "label": "Monte Carlo ES",
+     "final_return_mean": 24.0,
+     "final_return_std": 0.0,
      "success_rate": 1.0,
-     "optimal_rate": 0.0,
+     "optimal_rate": 1.0,
+     "accuracy": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "accuracy_mean": 1.0,
      "first_optimal_episode": [
+      22500,
+      34500,
+      25500,
+      24000,
+      31500
+     ],
+     "first_full_accuracy_episode": [
+      30000,
+      51000,
+      33000,
+      37500,
+      37500
+     ],
+     "final_steps": [
+      36,
+      36,
+      36,
+      36,
+      36
+     ],
+     "final_routes": [
+      {
+       "return": 24.0,
+       "steps": 36,
+       "success": true,
+       "order": "B-A-C",
+       "late": false
+      },
+      {
+       "return": 24.0,
+       "steps": 36,
+       "success": true,
+       "order": "B-A-C",
+       "late": false
+      },
+      {
+       "return": 24.0,
+       "steps": 36,
+       "success": true,
+       "order": "B-A-C",
+       "late": false
+      },
+      {
+       "return": 24.0,
+       "steps": 36,
+       "success": true,
+       "order": "B-A-C",
+       "late": false
+      },
+      {
+       "return": 24.0,
+       "steps": 36,
+       "success": true,
+       "order": "B-A-C",
+       "late": false
+      }
+     ],
+     "time_mean_s": 0.49794573783874513
+    }
+   },
+   "baseline": {
+    "ql_cu": {
+     "label": "Q-learning (cau hinh cu)",
+     "final_return_mean": 24.0,
+     "final_return_std": 0.0,
+     "success_rate": 1.0,
+     "optimal_rate": 1.0,
+     "accuracy": [
+      0.9285714285714286,
+      1.0,
+      1.0,
+      1.0,
+      0.9285714285714286
+     ],
+     "accuracy_mean": 0.9714285714285715,
+     "first_optimal_episode": [
+      36000,
+      39000,
+      40500,
+      40500,
+      28500
+     ],
+     "first_full_accuracy_episode": [
+      null,
+      40500,
+      42000,
+      42000,
+      null
+     ],
+     "final_steps": [
+      36,
+      36,
+      36,
+      36,
+      36
+     ],
+     "final_routes": [
+      {
+       "return": 24.0,
+       "steps": 36,
+       "success": true,
+       "order": "B-A-C",
+       "late": false
+      },
+      {
+       "return": 24.0,
+       "steps": 36,
+       "success": true,
+       "order": "B-A-C",
+       "late": false
+      },
+      {
+       "return": 24.0,
+       "steps": 36,
+       "success": true,
+       "order": "B-A-C",
+       "late": false
+      },
+      {
+       "return": 24.0,
+       "steps": 36,
+       "success": true,
+       "order": "B-A-C",
+       "late": false
+      },
+      {
+       "return": 24.0,
+       "steps": 36,
+       "success": true,
+       "order": "B-A-C",
+       "late": false
+      }
+     ],
+     "time_mean_s": 1.5177656173706056
+    },
+    "sarsa_cu": {
+     "label": "SARSA (cau hinh cu)",
+     "final_return_mean": -6.8,
+     "final_return_std": 61.6,
+     "success_rate": 0.8,
+     "optimal_rate": 0.8,
+     "accuracy": [
+      0.75,
+      0.32142857142857145,
+      0.7857142857142857,
+      0.5357142857142857,
+      0.21428571428571427
+     ],
+     "accuracy_mean": 0.5214285714285715,
+     "first_optimal_episode": [
+      129000,
+      144000,
+      106500,
+      129000,
+      114000
+     ],
+     "first_full_accuracy_episode": [
       null,
       null,
       null,
@@ -678,199 +827,395 @@
       null
      ],
      "final_steps": [
-      47,
-      41,
-      49,
-      49,
-      44
+      36,
+      36,
+      36,
+      150,
+      36
      ],
      "final_routes": [
       {
-       "return": -27.0,
-       "steps": 47,
-       "success": true,
-       "order": "A-B-C",
-       "late": true
-      },
-      {
-       "return": -31.0,
-       "steps": 41,
-       "success": true,
-       "order": "A-B-C",
-       "late": true
-      },
-      {
-       "return": -19.0,
-       "steps": 49,
+       "return": 24.0,
+       "steps": 36,
        "success": true,
        "order": "B-A-C",
-       "late": true
+       "late": false
       },
       {
-       "return": -19.0,
-       "steps": 49,
+       "return": 24.0,
+       "steps": 36,
        "success": true,
        "order": "B-A-C",
-       "late": true
+       "late": false
       },
       {
-       "return": -14.0,
-       "steps": 44,
+       "return": 24.0,
+       "steps": 36,
        "success": true,
-       "order": "A-B-C",
-       "late": true
+       "order": "B-A-C",
+       "late": false
+      },
+      {
+       "return": -130.0,
+       "steps": 150,
+       "success": false,
+       "order": "B",
+       "late": false
+      },
+      {
+       "return": 24.0,
+       "steps": 36,
+       "success": true,
+       "order": "B-A-C",
+       "late": false
       }
      ],
-     "time_mean_s": 120.95293626785278
+     "time_mean_s": 1.4283756256103515
+    },
+    "mc_cu": {
+     "label": "Monte Carlo (cau hinh cu)",
+     "final_return_mean": 24.0,
+     "final_return_std": 0.0,
+     "success_rate": 1.0,
+     "optimal_rate": 1.0,
+     "accuracy": [
+      0.6428571428571429,
+      0.75,
+      0.6428571428571429,
+      0.75,
+      0.75
+     ],
+     "accuracy_mean": 0.7071428571428571,
+     "first_optimal_episode": [
+      70500,
+      57000,
+      66000,
+      64500,
+      64500
+     ],
+     "first_full_accuracy_episode": [
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "final_steps": [
+      36,
+      36,
+      36,
+      36,
+      36
+     ],
+     "final_routes": [
+      {
+       "return": 24.0,
+       "steps": 36,
+       "success": true,
+       "order": "B-A-C",
+       "late": false
+      },
+      {
+       "return": 24.0,
+       "steps": 36,
+       "success": true,
+       "order": "B-A-C",
+       "late": false
+      },
+      {
+       "return": 24.0,
+       "steps": 36,
+       "success": true,
+       "order": "B-A-C",
+       "late": false
+      },
+      {
+       "return": 24.0,
+       "steps": 36,
+       "success": true,
+       "order": "B-A-C",
+       "late": false
+      },
+      {
+       "return": 24.0,
+       "steps": 36,
+       "success": true,
+       "order": "B-A-C",
+       "late": false
+      }
+     ],
+     "time_mean_s": 1.5405130863189698
     }
    }
   },
-  "S4_o_tang_tai": {
-   "title": "S4: 3 kien, suc chua 1, o tang tai B (mang 2 trong 1 chuyen)",
+  "S3_kien_deadline": {
+   "title": "S3 - Cap 3 (kho): 3 kien, kien C co deadline 20 buoc",
+   "level": 3,
    "grid": "7x7",
    "n_parcels": 3,
    "capacity": 1,
    "n_pos": 49,
    "n_codes": 27,
-   "n_tau": 1,
-   "n_boost": 3,
-   "n_states": 3969,
-   "n_reachable": 2347,
+   "n_tau": 21,
+   "n_boost": 1,
+   "n_states": 27783,
+   "n_reachable": 4027,
    "n_actions": 6,
    "optimal": {
-    "return": 22.0,
-    "steps": 38,
+    "return": 16.0,
+    "steps": 44,
     "success": true,
     "order": "C-B-A",
     "late": false
    },
-   "episodes": 100000,
+   "episodes": 2000000,
    "algos": {
-    "ql_q0": {
-     "label": "Q-learning (Q0 = 0)",
-     "final_return_mean": 21.0,
-     "final_return_std": 0.0,
-     "success_rate": 1.0,
-     "optimal_rate": 0.0,
-     "first_optimal_episode": [
-      null,
-      null,
-      null,
-      null,
-      null
-     ],
-     "final_steps": [
-      39,
-      39,
-      39,
-      39,
-      39
-     ],
-     "final_routes": [
-      {
-       "return": 21.0,
-       "steps": 39,
-       "success": true,
-       "order": "B-A-C",
-       "late": false
-      },
-      {
-       "return": 21.0,
-       "steps": 39,
-       "success": true,
-       "order": "B-A-C",
-       "late": false
-      },
-      {
-       "return": 21.0,
-       "steps": 39,
-       "success": true,
-       "order": "B-A-C",
-       "late": false
-      },
-      {
-       "return": 21.0,
-       "steps": 39,
-       "success": true,
-       "order": "B-A-C",
-       "late": false
-      },
-      {
-       "return": 21.0,
-       "steps": 39,
-       "success": true,
-       "order": "B-A-C",
-       "late": false
-      }
-     ],
-     "time_mean_s": 148.82480897903443
-    },
-    "ql_opt": {
-     "label": "Q-learning (Q0 = 30, lac quan)",
-     "final_return_mean": 22.0,
+    "ql": {
+     "label": "Q-learning",
+     "final_return_mean": 16.0,
      "final_return_std": 0.0,
      "success_rate": 1.0,
      "optimal_rate": 1.0,
+     "accuracy": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "accuracy_mean": 1.0,
      "first_optimal_episode": [
-      17000,
-      17000,
-      16500,
-      17500,
-      17000
+      70000,
+      50000,
+      20000,
+      50000,
+      60000
+     ],
+     "first_full_accuracy_episode": [
+      350000,
+      400000,
+      350000,
+      350000,
+      340000
      ],
      "final_steps": [
-      38,
-      38,
-      38,
-      38,
-      38
+      44,
+      44,
+      44,
+      44,
+      44
      ],
      "final_routes": [
       {
-       "return": 22.0,
-       "steps": 38,
+       "return": 16.0,
+       "steps": 44,
        "success": true,
        "order": "C-B-A",
        "late": false
       },
       {
-       "return": 22.0,
-       "steps": 38,
+       "return": 16.0,
+       "steps": 44,
        "success": true,
        "order": "C-B-A",
        "late": false
       },
       {
-       "return": 22.0,
-       "steps": 38,
+       "return": 16.0,
+       "steps": 44,
        "success": true,
        "order": "C-B-A",
        "late": false
       },
       {
-       "return": 22.0,
-       "steps": 38,
+       "return": 16.0,
+       "steps": 44,
        "success": true,
        "order": "C-B-A",
        "late": false
       },
       {
-       "return": 22.0,
-       "steps": 38,
+       "return": 16.0,
+       "steps": 44,
        "success": true,
        "order": "C-B-A",
        "late": false
       }
      ],
-     "time_mean_s": 145.57030210494995
+     "time_mean_s": 6.7898131847381595
+    },
+    "sarsa": {
+     "label": "SARSA",
+     "final_return_mean": 16.0,
+     "final_return_std": 0.0,
+     "success_rate": 1.0,
+     "optimal_rate": 1.0,
+     "accuracy": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "accuracy_mean": 1.0,
+     "first_optimal_episode": [
+      410000,
+      380000,
+      380000,
+      540000,
+      450000
+     ],
+     "first_full_accuracy_episode": [
+      980000,
+      1220000,
+      1190000,
+      1140000,
+      1080000
+     ],
+     "final_steps": [
+      44,
+      44,
+      44,
+      44,
+      44
+     ],
+     "final_routes": [
+      {
+       "return": 16.0,
+       "steps": 44,
+       "success": true,
+       "order": "C-B-A",
+       "late": false
+      },
+      {
+       "return": 16.0,
+       "steps": 44,
+       "success": true,
+       "order": "C-B-A",
+       "late": false
+      },
+      {
+       "return": 16.0,
+       "steps": 44,
+       "success": true,
+       "order": "C-B-A",
+       "late": false
+      },
+      {
+       "return": 16.0,
+       "steps": 44,
+       "success": true,
+       "order": "C-B-A",
+       "late": false
+      },
+      {
+       "return": 16.0,
+       "steps": 44,
+       "success": true,
+       "order": "C-B-A",
+       "late": false
+      }
+     ],
+     "time_mean_s": 4.144159841537475
     },
     "mc": {
-     "label": "Monte Carlo first-visit",
-     "final_return_mean": -200.0,
+     "label": "Monte Carlo ES",
+     "final_return_mean": 16.0,
      "final_return_std": 0.0,
-     "success_rate": 0.0,
-     "optimal_rate": 0.0,
+     "success_rate": 1.0,
+     "optimal_rate": 1.0,
+     "accuracy": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "accuracy_mean": 1.0,
      "first_optimal_episode": [
+      200000,
+      280000,
+      280000,
+      190000,
+      160000
+     ],
+     "first_full_accuracy_episode": [
+      280000,
+      370000,
+      350000,
+      260000,
+      290000
+     ],
+     "final_steps": [
+      44,
+      44,
+      44,
+      44,
+      44
+     ],
+     "final_routes": [
+      {
+       "return": 16.0,
+       "steps": 44,
+       "success": true,
+       "order": "C-B-A",
+       "late": false
+      },
+      {
+       "return": 16.0,
+       "steps": 44,
+       "success": true,
+       "order": "C-B-A",
+       "late": false
+      },
+      {
+       "return": 16.0,
+       "steps": 44,
+       "success": true,
+       "order": "C-B-A",
+       "late": false
+      },
+      {
+       "return": 16.0,
+       "steps": 44,
+       "success": true,
+       "order": "C-B-A",
+       "late": false
+      },
+      {
+       "return": 16.0,
+       "steps": 44,
+       "success": true,
+       "order": "C-B-A",
+       "late": false
+      }
+     ],
+     "time_mean_s": 5.269415330886841
+    }
+   },
+   "baseline": {
+    "ql_cu": {
+     "label": "Q-learning (cau hinh cu)",
+     "final_return_mean": 16.0,
+     "final_return_std": 0.0,
+     "success_rate": 1.0,
+     "optimal_rate": 1.0,
+     "accuracy": [
+      0.07894736842105263,
+      0.07894736842105263,
+      0.07894736842105263,
+      0.6842105263157895,
+      0.07894736842105263
+     ],
+     "accuracy_mean": 0.2,
+     "first_optimal_episode": [
+      260000,
+      200000,
+      280000,
+      270000,
+      320000
+     ],
+     "first_full_accuracy_episode": [
       null,
       null,
       null,
@@ -878,304 +1223,1007 @@
       null
      ],
      "final_steps": [
-      200,
-      200,
-      200,
-      200,
-      200
+      44,
+      44,
+      44,
+      44,
+      44
      ],
      "final_routes": [
       {
-       "return": -200.0,
-       "steps": 200,
-       "success": false,
-       "order": "",
+       "return": 16.0,
+       "steps": 44,
+       "success": true,
+       "order": "C-B-A",
        "late": false
       },
       {
-       "return": -200.0,
-       "steps": 200,
-       "success": false,
-       "order": "",
+       "return": 16.0,
+       "steps": 44,
+       "success": true,
+       "order": "C-B-A",
        "late": false
       },
       {
-       "return": -200.0,
-       "steps": 200,
-       "success": false,
-       "order": "",
+       "return": 16.0,
+       "steps": 44,
+       "success": true,
+       "order": "C-B-A",
        "late": false
       },
       {
-       "return": -200.0,
-       "steps": 200,
-       "success": false,
-       "order": "",
+       "return": 16.0,
+       "steps": 44,
+       "success": true,
+       "order": "C-B-A",
        "late": false
       },
       {
-       "return": -200.0,
-       "steps": 200,
-       "success": false,
-       "order": "",
+       "return": 16.0,
+       "steps": 44,
+       "success": true,
+       "order": "C-B-A",
        "late": false
       }
      ],
-     "time_mean_s": 219.13248615264894
+     "time_mean_s": 12.725328350067139
+    },
+    "sarsa_cu": {
+     "label": "SARSA (cau hinh cu)",
+     "final_return_mean": -23.2,
+     "final_return_std": 3.54400902933387,
+     "success_rate": 1.0,
+     "optimal_rate": 0.0,
+     "accuracy": [
+      0.0,
+      0.0,
+      0.02631578947368421,
+      0.0,
+      0.02631578947368421
+     ],
+     "accuracy_mean": 0.010526315789473684,
+     "first_optimal_episode": [
+      null,
+      null,
+      null,
+      null,
+      1740000
+     ],
+     "first_full_accuracy_episode": [
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "final_steps": [
+      50,
+      53,
+      60,
+      51,
+      52
+     ],
+     "final_routes": [
+      {
+       "return": -20.0,
+       "steps": 50,
+       "success": true,
+       "order": "B-A-C",
+       "late": true
+      },
+      {
+       "return": -23.0,
+       "steps": 53,
+       "success": true,
+       "order": "B-A-C",
+       "late": true
+      },
+      {
+       "return": -30.0,
+       "steps": 60,
+       "success": true,
+       "order": "B-A-C",
+       "late": true
+      },
+      {
+       "return": -21.0,
+       "steps": 51,
+       "success": true,
+       "order": "B-A-C",
+       "late": true
+      },
+      {
+       "return": -22.0,
+       "steps": 52,
+       "success": true,
+       "order": "B-A-C",
+       "late": true
+      }
+     ],
+     "time_mean_s": 11.876896572113036
+    },
+    "mc_cu": {
+     "label": "Monte Carlo (cau hinh cu)",
+     "final_return_mean": -20.2,
+     "final_return_std": 2.6381811916545836,
+     "success_rate": 1.0,
+     "optimal_rate": 0.0,
+     "accuracy": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "accuracy_mean": 0.0,
+     "first_optimal_episode": [
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "first_full_accuracy_episode": [
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "final_steps": [
+      55,
+      49,
+      51,
+      48,
+      48
+     ],
+     "final_routes": [
+      {
+       "return": -25.0,
+       "steps": 55,
+       "success": true,
+       "order": "B-A-C",
+       "late": true
+      },
+      {
+       "return": -19.0,
+       "steps": 49,
+       "success": true,
+       "order": "B-A-C",
+       "late": true
+      },
+      {
+       "return": -21.0,
+       "steps": 51,
+       "success": true,
+       "order": "B-A-C",
+       "late": true
+      },
+      {
+       "return": -18.0,
+       "steps": 48,
+       "success": true,
+       "order": "B-A-C",
+       "late": true
+      },
+      {
+       "return": -18.0,
+       "steps": 48,
+       "success": true,
+       "order": "B-A-C",
+       "late": true
+      }
+     ],
+     "time_mean_s": 12.53635540008545
+    }
+   }
+  },
+  "S4_o_tang_tai": {
+   "title": "S4 - Cap 4 (rat kho): 4 kien, o tang tai B + kien D co deadline 22 buoc",
+   "level": 4,
+   "grid": "8x8",
+   "n_parcels": 4,
+   "capacity": 1,
+   "n_pos": 64,
+   "n_codes": 81,
+   "n_tau": 23,
+   "n_boost": 3,
+   "n_states": 357696,
+   "n_reachable": 15612,
+   "n_actions": 6,
+   "optimal": {
+    "return": 13.0,
+    "steps": 67,
+    "success": true,
+    "order": "D-C-B-A",
+    "late": false
+   },
+   "episodes": 6000000,
+   "algos": {
+    "ql": {
+     "label": "Q-learning",
+     "final_return_mean": 13.0,
+     "final_return_std": 0.0,
+     "success_rate": 1.0,
+     "optimal_rate": 1.0,
+     "accuracy": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "accuracy_mean": 1.0,
+     "first_optimal_episode": [
+      180000,
+      390000,
+      450000,
+      210000,
+      480000
+     ],
+     "first_full_accuracy_episode": [
+      1440000,
+      1140000,
+      840000,
+      1170000,
+      870000
+     ],
+     "final_steps": [
+      67,
+      67,
+      67,
+      67,
+      67
+     ],
+     "final_routes": [
+      {
+       "return": 13.0,
+       "steps": 67,
+       "success": true,
+       "order": "D-C-B-A",
+       "late": false
+      },
+      {
+       "return": 13.0,
+       "steps": 67,
+       "success": true,
+       "order": "D-C-B-A",
+       "late": false
+      },
+      {
+       "return": 13.0,
+       "steps": 67,
+       "success": true,
+       "order": "D-C-B-A",
+       "late": false
+      },
+      {
+       "return": 13.0,
+       "steps": 67,
+       "success": true,
+       "order": "D-C-B-A",
+       "late": false
+      },
+      {
+       "return": 13.0,
+       "steps": 67,
+       "success": true,
+       "order": "D-C-B-A",
+       "late": false
+      }
+     ],
+     "time_mean_s": 37.61313762664795
+    },
+    "sarsa": {
+     "label": "SARSA",
+     "final_return_mean": 13.0,
+     "final_return_std": 0.0,
+     "success_rate": 1.0,
+     "optimal_rate": 1.0,
+     "accuracy": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "accuracy_mean": 1.0,
+     "first_optimal_episode": [
+      2220000,
+      2820000,
+      1440000,
+      2310000,
+      1920000
+     ],
+     "first_full_accuracy_episode": [
+      3450000,
+      3930000,
+      3570000,
+      3480000,
+      4140000
+     ],
+     "final_steps": [
+      67,
+      67,
+      67,
+      67,
+      67
+     ],
+     "final_routes": [
+      {
+       "return": 13.0,
+       "steps": 67,
+       "success": true,
+       "order": "D-C-B-A",
+       "late": false
+      },
+      {
+       "return": 13.0,
+       "steps": 67,
+       "success": true,
+       "order": "D-C-B-A",
+       "late": false
+      },
+      {
+       "return": 13.0,
+       "steps": 67,
+       "success": true,
+       "order": "D-C-B-A",
+       "late": false
+      },
+      {
+       "return": 13.0,
+       "steps": 67,
+       "success": true,
+       "order": "D-C-B-A",
+       "late": false
+      },
+      {
+       "return": 13.0,
+       "steps": 67,
+       "success": true,
+       "order": "D-C-B-A",
+       "late": false
+      }
+     ],
+     "time_mean_s": 22.717845916748047
+    },
+    "mc": {
+     "label": "Monte Carlo ES",
+     "final_return_mean": 13.0,
+     "final_return_std": 0.0,
+     "success_rate": 1.0,
+     "optimal_rate": 1.0,
+     "accuracy": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "accuracy_mean": 1.0,
+     "first_optimal_episode": [
+      1530000,
+      1170000,
+      870000,
+      1260000,
+      1290000
+     ],
+     "first_full_accuracy_episode": [
+      2040000,
+      1680000,
+      1470000,
+      1980000,
+      1740000
+     ],
+     "final_steps": [
+      67,
+      67,
+      67,
+      67,
+      67
+     ],
+     "final_routes": [
+      {
+       "return": 13.0,
+       "steps": 67,
+       "success": true,
+       "order": "D-C-B-A",
+       "late": false
+      },
+      {
+       "return": 13.0,
+       "steps": 67,
+       "success": true,
+       "order": "D-C-B-A",
+       "late": false
+      },
+      {
+       "return": 13.0,
+       "steps": 67,
+       "success": true,
+       "order": "D-C-B-A",
+       "late": false
+      },
+      {
+       "return": 13.0,
+       "steps": 67,
+       "success": true,
+       "order": "D-C-B-A",
+       "late": false
+      },
+      {
+       "return": 13.0,
+       "steps": 67,
+       "success": true,
+       "order": "D-C-B-A",
+       "late": false
+      }
+     ],
+     "time_mean_s": 37.80297517776489
+    }
+   },
+   "baseline": {
+    "ql_cu": {
+     "label": "Q-learning (cau hinh cu)",
+     "final_return_mean": 13.0,
+     "final_return_std": 0.0,
+     "success_rate": 1.0,
+     "optimal_rate": 1.0,
+     "accuracy": [
+      0.6458333333333334,
+      0.6458333333333334,
+      0.5625,
+      0.6458333333333334,
+      0.5625
+     ],
+     "accuracy_mean": 0.6125,
+     "first_optimal_episode": [
+      1320000,
+      1200000,
+      1290000,
+      1260000,
+      1200000
+     ],
+     "first_full_accuracy_episode": [
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "final_steps": [
+      67,
+      67,
+      67,
+      67,
+      67
+     ],
+     "final_routes": [
+      {
+       "return": 13.0,
+       "steps": 67,
+       "success": true,
+       "order": "D-C-B-A",
+       "late": false
+      },
+      {
+       "return": 13.0,
+       "steps": 67,
+       "success": true,
+       "order": "D-C-B-A",
+       "late": false
+      },
+      {
+       "return": 13.0,
+       "steps": 67,
+       "success": true,
+       "order": "D-C-B-A",
+       "late": false
+      },
+      {
+       "return": 13.0,
+       "steps": 67,
+       "success": true,
+       "order": "D-C-B-A",
+       "late": false
+      },
+      {
+       "return": 13.0,
+       "steps": 67,
+       "success": true,
+       "order": "D-C-B-A",
+       "late": false
+      }
+     ],
+     "time_mean_s": 61.19124207496643
+    },
+    "sarsa_cu": {
+     "label": "SARSA (cau hinh cu)",
+     "final_return_mean": -191.2,
+     "final_return_std": 138.11068025319403,
+     "success_rate": 0.4,
+     "optimal_rate": 0.0,
+     "accuracy": [
+      0.0,
+      0.020833333333333332,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "accuracy_mean": 0.004166666666666667,
+     "first_optimal_episode": [
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "first_full_accuracy_episode": [
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "final_steps": [
+      74,
+      72,
+      300,
+      300,
+      300
+     ],
+     "final_routes": [
+      {
+       "return": -24.0,
+       "steps": 74,
+       "success": true,
+       "order": "B-A-D-C",
+       "late": true
+      },
+      {
+       "return": -22.0,
+       "steps": 72,
+       "success": true,
+       "order": "B-A-D-C",
+       "late": true
+      },
+      {
+       "return": -290.0,
+       "steps": 300,
+       "success": false,
+       "order": "A-B",
+       "late": true
+      },
+      {
+       "return": -290.0,
+       "steps": 300,
+       "success": false,
+       "order": "B-A",
+       "late": true
+      },
+      {
+       "return": -330.0,
+       "steps": 300,
+       "success": false,
+       "order": "",
+       "late": true
+      }
+     ],
+     "time_mean_s": 59.52862410545349
+    },
+    "mc_cu": {
+     "label": "Monte Carlo (cau hinh cu)",
+     "final_return_mean": -271.2,
+     "final_return_std": 117.6,
+     "success_rate": 0.2,
+     "optimal_rate": 0.0,
+     "accuracy": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "accuracy_mean": 0.0,
+     "first_optimal_episode": [
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "first_full_accuracy_episode": [
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "final_steps": [
+      86,
+      300,
+      300,
+      300,
+      300
+     ],
+     "final_routes": [
+      {
+       "return": -36.0,
+       "steps": 86,
+       "success": true,
+       "order": "C-B-D-A",
+       "late": true
+      },
+      {
+       "return": -330.0,
+       "steps": 300,
+       "success": false,
+       "order": "",
+       "late": true
+      },
+      {
+       "return": -330.0,
+       "steps": 300,
+       "success": false,
+       "order": "",
+       "late": true
+      },
+      {
+       "return": -330.0,
+       "steps": 300,
+       "success": false,
+       "order": "",
+       "late": true
+      },
+      {
+       "return": -330.0,
+       "steps": 300,
+       "success": false,
+       "order": "",
+       "late": true
+      }
+     ],
+     "time_mean_s": 84.40223708152772
     }
    }
   }
  },
  "variants": {
   "S3_phat_tre_30": {
-   "desc": "Deadline 18 buoc, phat tre 30 (goc)",
+   "desc": "Deadline 20 buoc, phat tre 30 (goc)",
    "base": "configs/s3_deadline.json",
    "optimal": {
-    "return": 22.0,
-    "steps": 38,
+    "return": 16.0,
+    "steps": 44,
     "success": true,
     "order": "C-B-A",
     "late": false
    },
-   "n_reachable": 2825,
-   "algo": "ql_opt",
+   "n_reachable": 4027,
+   "algo": "ql",
    "learned_routes": [
     {
-     "return": 22.0,
-     "steps": 38,
+     "return": 16.0,
+     "steps": 44,
      "success": true,
      "order": "C-B-A",
      "late": false
     },
     {
-     "return": 22.0,
-     "steps": 38,
+     "return": 16.0,
+     "steps": 44,
      "success": true,
      "order": "C-B-A",
      "late": false
     },
     {
-     "return": 22.0,
-     "steps": 38,
+     "return": 16.0,
+     "steps": 44,
      "success": true,
      "order": "C-B-A",
      "late": false
     },
     {
-     "return": 22.0,
-     "steps": 38,
+     "return": 16.0,
+     "steps": 44,
      "success": true,
      "order": "C-B-A",
      "late": false
     },
     {
-     "return": 22.0,
-     "steps": 38,
+     "return": 16.0,
+     "steps": 44,
      "success": true,
      "order": "C-B-A",
      "late": false
     }
+   ],
+   "accuracy": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
    ]
   },
   "S3_phat_tre_0": {
-   "desc": "Deadline 18 buoc, phat tre 0",
+   "desc": "Deadline 20 buoc, phat tre 0",
    "base": "configs/s3_deadline.json",
    "optimal": {
-    "return": 31.0,
-    "steps": 29,
+    "return": 20.0,
+    "steps": 40,
     "success": true,
-    "order": "A-B-C",
+    "order": "B-A-C",
     "late": true
    },
-   "n_reachable": 2825,
-   "algo": "ql_opt",
+   "n_reachable": 4027,
+   "algo": "ql",
    "learned_routes": [
     {
-     "return": 30.0,
-     "steps": 30,
+     "return": 20.0,
+     "steps": 40,
      "success": true,
-     "order": "A-B-C",
+     "order": "B-A-C",
      "late": true
     },
     {
-     "return": 31.0,
-     "steps": 29,
+     "return": 20.0,
+     "steps": 40,
      "success": true,
-     "order": "A-B-C",
+     "order": "B-A-C",
      "late": true
     },
     {
-     "return": 31.0,
-     "steps": 29,
+     "return": 20.0,
+     "steps": 40,
      "success": true,
-     "order": "A-B-C",
+     "order": "B-A-C",
      "late": true
     },
     {
-     "return": 30.0,
-     "steps": 30,
+     "return": 20.0,
+     "steps": 40,
      "success": true,
-     "order": "A-B-C",
+     "order": "B-A-C",
      "late": true
     },
     {
-     "return": 30.0,
-     "steps": 30,
+     "return": 20.0,
+     "steps": 40,
      "success": true,
-     "order": "A-B-C",
+     "order": "B-A-C",
      "late": true
     }
+   ],
+   "accuracy": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
    ]
   },
-  "S3_deadline_35": {
-   "desc": "Deadline 35 buoc, phat tre 30",
+  "S3_deadline_45": {
+   "desc": "Deadline 45 buoc, phat tre 30",
    "base": "configs/s3_deadline.json",
    "optimal": {
-    "return": 31.0,
-    "steps": 29,
+    "return": 20.0,
+    "steps": 40,
     "success": true,
-    "order": "A-B-C",
+    "order": "B-A-C",
     "late": false
    },
-   "n_reachable": 8210,
-   "algo": "ql_opt",
+   "n_reachable": 14558,
+   "algo": "ql",
    "learned_routes": [
     {
-     "return": 31.0,
-     "steps": 29,
+     "return": 20.0,
+     "steps": 40,
      "success": true,
-     "order": "A-B-C",
+     "order": "B-A-C",
      "late": false
     },
     {
-     "return": 31.0,
-     "steps": 29,
+     "return": 20.0,
+     "steps": 40,
      "success": true,
-     "order": "A-B-C",
+     "order": "B-A-C",
      "late": false
     },
     {
-     "return": 30.0,
-     "steps": 30,
+     "return": 20.0,
+     "steps": 40,
      "success": true,
-     "order": "A-B-C",
+     "order": "B-A-C",
      "late": false
     },
     {
-     "return": 31.0,
-     "steps": 29,
+     "return": 20.0,
+     "steps": 40,
      "success": true,
-     "order": "A-B-C",
+     "order": "B-A-C",
      "late": false
     },
     {
-     "return": 31.0,
-     "steps": 29,
+     "return": 20.0,
+     "steps": 40,
      "success": true,
-     "order": "A-B-C",
+     "order": "B-A-C",
      "late": false
     }
+   ],
+   "accuracy": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
    ]
   },
   "S4_co_tang_tai": {
    "desc": "Co o tang tai (goc)",
    "base": "configs/s4_booster.json",
    "optimal": {
-    "return": 22.0,
-    "steps": 38,
+    "return": 13.0,
+    "steps": 67,
     "success": true,
-    "order": "C-B-A",
+    "order": "D-C-B-A",
     "late": false
    },
-   "n_reachable": 2347,
-   "algo": "ql_opt",
+   "n_reachable": 15612,
+   "algo": "ql",
    "learned_routes": [
     {
-     "return": 22.0,
-     "steps": 38,
+     "return": 13.0,
+     "steps": 67,
      "success": true,
-     "order": "C-B-A",
+     "order": "D-C-B-A",
      "late": false
     },
     {
-     "return": 22.0,
-     "steps": 38,
+     "return": 13.0,
+     "steps": 67,
      "success": true,
-     "order": "C-B-A",
+     "order": "D-C-B-A",
      "late": false
     },
     {
-     "return": 22.0,
-     "steps": 38,
+     "return": 13.0,
+     "steps": 67,
      "success": true,
-     "order": "C-B-A",
+     "order": "D-C-B-A",
      "late": false
     },
     {
-     "return": 22.0,
-     "steps": 38,
+     "return": 13.0,
+     "steps": 67,
      "success": true,
-     "order": "C-B-A",
+     "order": "D-C-B-A",
      "late": false
     },
     {
-     "return": 22.0,
-     "steps": 38,
+     "return": 13.0,
+     "steps": 67,
      "success": true,
-     "order": "C-B-A",
+     "order": "D-C-B-A",
      "late": false
     }
+   ],
+   "accuracy": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
    ]
   },
   "S4_khong_tang_tai": {
    "desc": "Bo o tang tai",
    "base": "configs/s4_booster.json",
    "optimal": {
-    "return": 14.0,
-    "steps": 46,
+    "return": 5.0,
+    "steps": 75,
     "success": true,
-    "order": "B-C-A",
+    "order": "D-B-C-A",
     "late": false
    },
-   "n_reachable": 763,
-   "algo": "ql_opt",
+   "n_reachable": 6972,
+   "algo": "ql",
    "learned_routes": [
     {
-     "return": 14.0,
-     "steps": 46,
+     "return": 5.0,
+     "steps": 75,
      "success": true,
-     "order": "B-C-A",
+     "order": "D-B-C-A",
      "late": false
     },
     {
-     "return": 14.0,
-     "steps": 46,
+     "return": 5.0,
+     "steps": 75,
      "success": true,
-     "order": "B-C-A",
+     "order": "D-B-C-A",
      "late": false
     },
     {
-     "return": 14.0,
-     "steps": 46,
+     "return": 5.0,
+     "steps": 75,
      "success": true,
-     "order": "B-C-A",
+     "order": "D-B-C-A",
      "late": false
     },
     {
-     "return": 14.0,
-     "steps": 46,
+     "return": 5.0,
+     "steps": 75,
      "success": true,
-     "order": "B-C-A",
+     "order": "D-B-C-A",
      "late": false
     },
     {
-     "return": 14.0,
-     "steps": 46,
+     "return": 5.0,
+     "steps": 75,
      "success": true,
-     "order": "B-C-A",
+     "order": "D-B-C-A",
      "late": false
     }
+   ],
+   "accuracy": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
    ]
   }
- }
+ },
+ "params": {
+  "ql": {
+   "label": "Q-learning",
+   "start_mode": "exploring",
+   "random_first": true,
+   "alpha": 1.0,
+   "eps_end": 0.01,
+   "decay_frac": 0.8,
+   "eps_decay": "exp"
+  },
+  "sarsa": {
+   "label": "SARSA",
+   "start_mode": "exploring",
+   "random_first": true,
+   "alpha": 0.5,
+   "alpha_end": 0.1,
+   "eps_end": 1e-05,
+   "decay_frac": 0.5,
+   "eps_decay": "exp"
+  },
+  "mc": {
+   "label": "Monte Carlo ES",
+   "start_mode": "exploring",
+   "random_first": true,
+   "alpha": 1.0,
+   "eps_start": 0.0,
+   "eps_end": 0.0
+  },
+  "ql_cu": {
+   "label": "Q-learning (cau hinh cu)",
+   "start_mode": "random_cell",
+   "eps_end": 0.05,
+   "decay_frac": 0.7,
+   "alpha": 0.5
+  },
+  "sarsa_cu": {
+   "label": "SARSA (cau hinh cu)",
+   "start_mode": "random_cell",
+   "eps_end": 0.05,
+   "decay_frac": 0.7,
+   "alpha": 0.5
+  },
+  "mc_cu": {
+   "label": "Monte Carlo (cau hinh cu)",
+   "start_mode": "random_cell",
+   "eps_end": 0.05,
+   "decay_frac": 0.7
+  }
+ },
+ "time_total_s": 220.51459884643555
 }

@@ -1,13 +1,15 @@
 {
  "name": "S3_phat_tre_30",
- "title": "S3: 3 kien, kien C co deadline 18 buoc",
+ "level": 3,
+ "title": "S3 - Cap 3 (kho): 3 kien, kien C co deadline 20 buoc",
  "grid": [
-  "S.....",
-  ".##.#.",
-  "......",
-  ".#..#.",
-  ".#.##.",
-  "......"
+  "S......",
+  ".##.##.",
+  ".......",
+  ".#.#.#.",
+  ".......",
+  ".##.##.",
+  "......."
  ],
  "capacity": 1,
  "parcels": [
@@ -15,7 +17,7 @@
    "name": "A",
    "pickup": [
     0,
-    2
+    6
    ],
    "drop": [
     2,
@@ -31,22 +33,22 @@
    ],
    "drop": [
     0,
-    5
+    3
    ],
    "reward": 20
   },
   {
    "name": "C",
    "pickup": [
-    5,
-    5
+    6,
+    6
    ],
    "drop": [
-    5,
+    6,
     0
    ],
    "reward": 20,
-   "deadline": 18
+   "deadline": 20
   }
  ],
  "rewards": {
@@ -56,14 +58,8 @@
  },
  "max_steps": 200,
  "train": {
-  "episodes": 200000,
+  "episodes": 2000000,
   "gamma": 0.99,
-  "alpha_ql": 0.5,
-  "start_mode": "random_cell",
-  "eps_start": 1.0,
-  "eps_end": 0.05,
-  "decay_frac": 0.7,
-  "eval_every": 500,
-  "best_ql": "ql_opt"
+  "best": "ql"
  }
 }

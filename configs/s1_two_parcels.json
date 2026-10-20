@@ -1,6 +1,7 @@
 {
   "name": "S1_2_kien_doc_lap",
-  "title": "S1: 2 kien doc lap (mang duoc 2)",
+  "level": 1,
+  "title": "S1 - Cap 1 (de): 2 kien doc lap, mang duoc 2",
   "grid": ["S....",
            "..#..",
            "..#..",
@@ -13,7 +14,5 @@
   ],
   "rewards": {"step": -1, "illegal": -10, "late_penalty": 0},
   "max_steps": 100,
-  "train": {"episodes": 20000, "gamma": 0.99, "alpha_ql": 0.5, "start_mode": "random_cell",
-            "eps_start": 1.0, "eps_end": 0.05, "decay_frac": 0.7, "eval_every": 100,
-            "best_ql": "ql_opt", "mc_long": true}
+  "train": {"episodes": 100000, "gamma": 0.99, "best": "ql"}
 }
