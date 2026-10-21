@@ -15,6 +15,7 @@ import numpy as np
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
+from matplotlib import patheffects  # noqa: E402
 from matplotlib.lines import Line2D  # noqa: E402
 from matplotlib.patches import Circle, Rectangle  # noqa: E402
 
@@ -95,9 +96,8 @@ def save(fig, name):
 # ======================================================================
 # Ve luoi
 # ======================================================================
-def draw_grid(ax, env, status=None, boost=0):
-    """Ve nen map: tuong, o S, o tang tai, diem lay (tron) va diem giao (vuong)."""
-    status = status or (WAITING,) * env.N
+def _grid_axes(ax, env):
+    """Truc vuong vua khit luoi H x W, hang 0 o tren, khong ve truc."""
     ax.set_xlim(-0.5, env.W - 0.5)
     ax.set_ylim(env.H - 0.5, -0.5)
     ax.set_aspect("equal")
@@ -106,6 +106,12 @@ def draw_grid(ax, env, status=None, boost=0):
     ax.set_yticks([])
     for sp in ax.spines.values():
         sp.set_visible(False)
+
+
+def draw_grid(ax, env, status=None, boost=0):
+    """Ve nen map: tuong, o S, o tang tai, diem lay (tron) va diem giao (vuong)."""
+    status = status or (WAITING,) * env.N
+    _grid_axes(ax, env)
     for r in range(env.H):
         for c in range(env.W):
             if (r, c) in env.walls:
@@ -263,6 +269,14 @@ def _carry_color(env, status):
     return PARCEL_COLOR[held[0]] if len(held) == 1 else (INK if held else EMPTY_PATH), held
 
 
+def _phase_label(env, k, status, boost):
+    _, held = _carry_color(env, status)
+    label = L("đang mang ", "carrying ") + "+".join(held) if held else L("tay không", "empty-handed")
+    if env.booster:
+        label += [L("", ""), L(" · tăng tải BẬT", " · booster ON"), L(" · tăng tải hết", " · booster used")][boost]
+    return L(f"Pha {k + 1}: {label}", f"Phase {k + 1}: {label}")
+
+
 def plot_policy(cfg, Q, fname, title):
     env = MultiDeliveryEnv(cfg, "depot")
     res = run_greedy(env, Q)
@@ -295,14 +309,11 @@ def plot_policy(cfg, Q, fname, title):
         if k + 1 < len(phases):
             nxt = phases[k + 1][1][0]
             pts.append((nxt[1], nxt[0]))
-        color, held = _carry_color(env, status)
+        color, _ = _carry_color(env, status)
         xs, ys = zip(*pts)
         ax.plot(xs, ys, color=color, lw=2.5, solid_capstyle="round", zorder=5)
         ax.add_patch(Circle(pts[0], 0.16, fc=color, ec=SURF, lw=2, zorder=6))
-        label = L("đang mang ", "carrying ") + "+".join(held) if held else L("tay không", "empty-handed")
-        if env.booster:
-            label += [L("", ""), L(" · tăng tải BẬT", " · booster ON"), L(" · tăng tải hết", " · booster used")][boost]
-        ax.set_title(L(f"Pha {k + 1}: {label}", f"Phase {k + 1}: {label}"), fontsize=9.5, color=INK)
+        ax.set_title(_phase_label(env, k, status, boost), fontsize=9.5, color=INK)
     for ax in axes[n:]:
         ax.axis("off")
     order = [e.split()[2] for _, e in res["events"] if e.startswith("giao kien")]
@@ -438,6 +449,139 @@ def plot_ablation(summary):
     save(fig, "ablation.png")
 
 
+# ======================================================================
+# 5) Heatmap gia tri V(s) = max_a Q(s, a)
+# ======================================================================
+# thang mau tuan tu 1 sac xanh: nhat = gia tri thap, dam = gia tri cao
+HEAT_CMAP = matplotlib.colors.LinearSegmentedColormap.from_list("heat", [
+    "#cde2fb", "#b7d3f6", "#9ec5f4", "#86b6ef", "#6da7ec", "#5598e7", "#3987e5",
+    "#2a78d6", "#256abf", "#1c5cab", "#184f95", "#104281", "#0d366b"])
+HEAT_DARK = 0.5  # tu muc nay tro len nen dam -> chu trang
+HEAT_BOTTOM = 1.35  # inch chua o day hinh cho thang mau + chu thich
+
+
+def value_grid(env, Q, status, tau=0, boost=0):
+    """V = max_a Q cua moi o, voi trang thai kien / tau / boost co dinh. NaN = tuong hoac trang thai khong dat toi."""
+    reach = env.reachable_states()
+    V = np.full((env.H, env.W), np.nan)
+    for r in range(env.H):
+        for c in range(env.W):
+            if (r, c, status, tau, boost) in reach:
+                V[r, c] = Q[env.encode((r, c, status, tau, boost))].max()
+    return V
+
+
+def draw_heat(ax, env, V, norm, status, numbers=True):
+    """To moi o theo V (cang dam cang 'dang gia'); diem lay / giao, S, x2 ve nho o goc tren trai."""
+    _grid_axes(ax, env)
+    marks = {env.depot: ("S", None, None)}
+    if env.booster:
+        marks[env.booster] = ("×2", None, None)
+    for i, p in enumerate(env.parcels):
+        col = PARCEL_COLOR[p["name"]]
+        if status[i] == WAITING:
+            marks[p["pickup"]] = (p["name"].lower(), "o", col)
+        marks[p["drop"]] = (p["name"] if status[i] != DELIVERED else "✓", "s", col)
+    for r in range(env.H):
+        for c in range(env.W):
+            v = V[r, c]
+            if (r, c) in env.walls:  # gach cheo de tuong khong lan voi o xanh dam khi in trang den
+                ax.add_patch(Rectangle((c - 0.5, r - 0.5), 1, 1, fc=WALL, ec=SURF, lw=1.5))
+                ax.add_patch(Rectangle((c - 0.5, r - 0.5), 1, 1, fc="none", ec="#8a8984", lw=0, hatch="////"))
+                continue
+            elif np.isnan(v):  # vd. o x2 khi chua kich hoat: robot khong the dung o day
+                fc = "#f6f5f2"
+            else:
+                fc = HEAT_CMAP(norm(v))
+            ax.add_patch(Rectangle((c - 0.5, r - 0.5), 1, 1, fc=fc, ec=SURF, lw=1.5))
+            dark = not np.isnan(v) and norm(v) >= HEAT_DARK
+            if (r, c) in marks:
+                txt, shape, col = marks[(r, c)]
+                x, y = c - 0.27, r - 0.27
+                if shape == "o":
+                    ax.add_patch(Circle((x, y), 0.17, fc=col, ec=SURF, lw=1.2, zorder=4))
+                elif shape == "s":
+                    done = txt == "✓"
+                    ax.add_patch(Rectangle((x - 0.17, y - 0.17), 0.34, 0.34, fc=SURF if done else col,
+                                           ec=col, lw=1.2, zorder=4))
+                tc = (col if txt == "✓" else "white") if shape else ("white" if dark else INK)
+                ax.text(x, y, txt, ha="center", va="center", fontsize=7, fontweight="bold", color=tc, zorder=5)
+            if numbers and not np.isnan(v):
+                dx = 0.1 if (r, c) in marks else 0
+                ax.text(c + dx, r + dx, f"{v:.0f}".replace("-", "−"), ha="center", va="center", fontsize=7.5,
+                        color="white" if dark else INK)
+
+
+def heat_colorbar(fig, norm):
+    """Thang mau nam ngang o day hinh, ngay tren map_legend (tinh theo inch de khong de len nhau)."""
+    h = fig.get_size_inches()[1]
+    cax = fig.add_axes((0.3, 0.75 / h, 0.4, 0.18 / h))
+    cb = fig.colorbar(matplotlib.cm.ScalarMappable(norm=norm, cmap=HEAT_CMAP), cax=cax, orientation="horizontal")
+    cb.outline.set_visible(False)
+    cb.set_label(L("V(s) = max Q(s, a): ô càng đậm, robot đứng ở đó càng được return cao",
+                   "V(s) = max Q(s, a): the darker the cell, the higher the return from there"), color=INK2)
+
+
+def plot_value_start(cfgs):
+    """Heatmap V khi robot xuat phat o tung o, chua lay kien nao (tau = 0, boost = 0)."""
+    panels = []
+    for name, cfg in cfgs.items():
+        env = MultiDeliveryEnv(cfg, "depot")
+        best = cfg["train"]["best"]
+        Q = load_q(os.path.join(RES, f"Q_{name}_{best}.npz"))
+        panels.append((name, env, best, value_grid(env, Q, (WAITING,) * env.N)))
+    norm = matplotlib.colors.Normalize(min(np.nanmin(p[3]) for p in panels), max(np.nanmax(p[3]) for p in panels))
+    fig, axes = plt.subplots(1, len(panels), figsize=(4.0 * len(panels), 4.6 + HEAT_BOTTOM))
+    for ax, (name, env, best, V) in zip(axes, panels):
+        draw_heat(ax, env, V, norm, (WAITING,) * env.N)
+        ax.set_title(f"{short(name)} · {ALGO_LABEL[best]}\n" + L(f"V tại S = {V[env.depot]:.1f}", f"V at S = {V[env.depot]:.1f}"),
+                     fontsize=10, color=INK)
+    map_legend(fig, has_booster=False)
+    fig.suptitle(L("Giá trị học được khi robot xuất phát ở từng ô (chưa lấy kiện nào)",
+                   "Learned value when the robot starts in each cell (no parcel picked up yet)"),
+                 fontsize=13, fontweight="bold", color=INK)
+    fig.tight_layout(rect=(0, HEAT_BOTTOM / fig.get_size_inches()[1], 1, 0.93))
+    heat_colorbar(fig, norm)
+    save(fig, "value_start.png")
+
+
+def plot_value_phases(cfg, Q, fname, title):
+    """Heatmap V cho tung pha cua lo trinh tham lam (cung cach chia pha voi plot_policy)."""
+    env = MultiDeliveryEnv(cfg, "depot")
+    phases = _segments(run_greedy(env, Q)["trajectory"])
+    phases = [p for p in phases if not all(s == DELIVERED for s in p[0][0])]
+    grids = [value_grid(env, Q, status, seg[0][3], boost) for (status, boost), seg in phases]
+    norm = matplotlib.colors.Normalize(min(np.nanmin(V) for V in grids), max(np.nanmax(V) for V in grids))
+    n = len(phases)
+    cols = min(4, n)
+    rows = int(np.ceil(n / cols))
+    fig, axes = plt.subplots(rows, cols, figsize=(3.3 * cols, 4.3 * rows + 0.4 + HEAT_BOTTOM))
+    axes = np.atleast_1d(axes).ravel()
+    for k, (ax, ((status, boost), seg), V) in enumerate(zip(axes, phases, grids)):
+        draw_heat(ax, env, V, norm, status, numbers=False)
+        pts = [(s[1], s[0]) for s in seg]
+        if k + 1 < len(phases):
+            nxt = phases[k + 1][1][0]
+            pts.append((nxt[1], nxt[0]))
+        xs, ys = zip(*pts)
+        ax.plot(xs, ys, color=INK, lw=2, solid_capstyle="round", zorder=6,
+                path_effects=[patheffects.withStroke(linewidth=4, foreground=SURF)])
+        ax.add_patch(Circle(pts[0], 0.14, fc=INK, ec=SURF, lw=1.5, zorder=7))
+        label = _phase_label(env, k, status, boost)
+        if env.dl_idx is not None and status[env.dl_idx] != DELIVERED:  # giao xong thi tau khong con y nghia
+            label += f" · τ={seg[0][3]}"
+        ax.set_title(label, fontsize=9.5, color=INK)
+    for ax in axes[n:]:
+        ax.axis("off")
+    fig.suptitle(L(f"{title}: giá trị V(s) trong từng pha, đường đen = lộ trình robot đi trong pha",
+                   f"{title}: value V(s) in each phase, black line = the robot's route in that phase"),
+                 fontsize=12, fontweight="bold", color=INK, x=0.01, ha="left")
+    map_legend(fig, has_booster=False)
+    fig.tight_layout(rect=(0, HEAT_BOTTOM / fig.get_size_inches()[1], 1, 0.95), h_pad=2.0)
+    heat_colorbar(fig, norm)
+    save(fig, fname)
+
+
 def main():
     global FIG, LANG
     ap = argparse.ArgumentParser()
@@ -475,6 +619,8 @@ def main():
         best = cfgs[name]["train"]["best"]
         Q = load_q(os.path.join(RES, f"Q_{name}_{best}.npz"))
         plot_policy(cfgs[name], Q, f"policy_{tag}.png", f"{tag} · {ALGO_LABEL[best]}")
+        plot_value_phases(cfgs[name], Q, f"value_{tag}.png", f"{tag} · {ALGO_LABEL[best]}")
+    plot_value_start(cfgs)
     plot_variants(summary)
 
 

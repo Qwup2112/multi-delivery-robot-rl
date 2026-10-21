@@ -322,7 +322,7 @@ Tham số dòng lệnh: `--quick`, `--scale`, `--seeds`, `--no-baseline`, `--wor
 
 ### 5.6 `plots.py` – vẽ biểu đồ
 
-Đọc `results/` và vẽ 13 hình vào `figures/` (mục 7). Thêm `--lang en` để vẽ cùng các hình với nhãn tiếng Anh vào `figures_en/`. Hàm `L(vi, en)` chọn chuỗi theo ngôn ngữ.
+Đọc `results/` và vẽ 17 hình vào `figures/` (mục 7). Thêm `--lang en` để vẽ cùng các hình với nhãn tiếng Anh vào `figures_en/`. Hàm `L(vi, en)` chọn chuỗi theo ngôn ngữ.
 
 ### 5.6b `convergence.py` – đo hội tụ của bảng Q
 
@@ -444,6 +444,8 @@ Huấn luyện: γ = 0,99; số episode S1: 100 000 · S2: 300 000 · S3: 2 000 
 | `figures/convergence.png` | sai số \|Q − Q*\| và % trạng thái chọn đúng theo episode |
 | `figures/convergence_S2_start.png` | Q(S, ·) tại ô xuất phát của S2 theo episode, so với Q* |
 | `figures/policy_S2.png`, `policy_S3.png`, `policy_S4.png` | policy cuối: mũi tên = hành động tham lam ở mỗi ô, từng "pha" (đang mang kiện nào), đường màu = đường đi thật |
+| `figures/value_start.png` | **heatmap giá trị** V(s) = max Q(s, a) khi robot xuất phát ở từng ô (chưa lấy kiện nào); ô càng đậm, xuất phát ở đó càng được return cao |
+| `figures/value_S2.png`, `value_S3.png`, `value_S4.png` | heatmap V(s) theo từng pha của lộ trình (chia pha như hình policy), đường đen = đường đi thật |
 | `figures/reward_deadline.png` | S3 khi đổi phạt trễ và độ dài deadline |
 | `figures/env_booster.png` | S4 có và không có ô tăng tải |
 | `figures/demo_S4.gif` | ảnh động robot chạy policy học được trên S4 |
@@ -536,6 +538,20 @@ Muốn học lâu hơn nữa: `python experiments.py --scale 2` (hoặc `SCALE =
 ![Policy S4](figures/policy_S4.png)
 
 ![Policy S2](figures/policy_S2.png)
+
+### 8.7 Bản đồ giá trị (heatmap)
+
+Mỗi ô được tô theo V(s) = max Q(s, a) của bảng Q học được: xanh nhạt = giá trị thấp, xanh đậm = giá trị cao. Ô gạch chéo là tường. Ô xám nhạt là trạng thái không thể xảy ra, ví dụ đứng trên ô ×2 khi tăng tải chưa kích hoạt.
+
+![Giá trị khi xuất phát](figures/value_start.png)
+
+- V tại ô S là 13,7 / 17,8 / 8,6 / 2,5 cho S1–S4. Các số này nhỏ hơn return tối ưu (18 / 24 / 16 / 13) vì V tính có chiết khấu γ = 0,99: phần thưởng +20 nhận càng muộn thì càng bị giảm.
+- Trong mỗi pha, ô càng gần mục tiêu hiện tại (kiện cần lấy hoặc đích cần giao) càng đậm. Policy tham lam vì vậy đi về phía ô đậm hơn.
+
+![Giá trị theo pha, S4](figures/value_S4.png)
+
+- Deadline hiện rõ trên heatmap. Ở S4 pha 2 (đang mang D, τ = 15) và S3 pha 2 (đang mang C, τ = 13), các ô xa đích có giá trị âm (thấp nhất khoảng −11 ở S4 và −12 ở S3) vì từ đó không kịp giao, chắc chắn bị phạt −30. Các ô gần đích thì đậm. Pha còn deadline được vẽ tại τ của đầu pha.
+- Ở S4 pha 8 (mang A + B nhờ ô ×2), gần như cả map đều đậm vì robot sắp nhận hai lần +20 liên tiếp.
 
 ---
 
@@ -715,6 +731,9 @@ Cột "Toán" là ký hiệu trong báo cáo, cột "Code" là tên biến trong
 | | đường ngang | giá trị tối ưu (Value Iteration) |
 | | vùng mờ quanh đường | trung bình ± độ lệch chuẩn qua 5 seed |
 | `ablation.png` | cột xám / cột màu | cấu hình cũ / cấu hình mới |
+| `value_*.png` (heatmap) | xanh nhạt → xanh đậm | V(s) = max Q(s, a) thấp → cao |
+| | ô gạch chéo / ô xám nhạt | tường / trạng thái không thể xảy ra |
+| | đường đen | đường robot đi trong pha đó |
 | `demo.py`, `play.py` (map chữ) | `@` | robot |
 | | `a` / `b` / `c` / `d` | kiện đang chờ lấy |
 | | `A` / `B` / `C` / `D` | đích chưa giao; `*` = đã giao |
