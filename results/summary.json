@@ -102,7 +102,7 @@
        "late": false
       }
      ],
-     "time_mean_s": 0.15420432090759278
+     "time_mean_s": 0.15833353996276855
     },
     "sarsa": {
      "label": "SARSA",
@@ -176,7 +176,7 @@
        "late": false
       }
      ],
-     "time_mean_s": 0.09888696670532227
+     "time_mean_s": 0.10502619743347168
     },
     "mc": {
      "label": "Monte Carlo ES",
@@ -250,7 +250,7 @@
        "late": false
       }
      ],
-     "time_mean_s": 0.1087977409362793
+     "time_mean_s": 0.1172574520111084
     }
    },
    "baseline": {
@@ -326,7 +326,7 @@
        "late": false
       }
      ],
-     "time_mean_s": 0.2902057647705078
+     "time_mean_s": 0.32488293647766114
     },
     "sarsa_cu": {
      "label": "SARSA (cau hinh cu)",
@@ -400,7 +400,7 @@
        "late": false
       }
      ],
-     "time_mean_s": 0.2634211540222168
+     "time_mean_s": 0.28989548683166505
     },
     "mc_cu": {
      "label": "Monte Carlo (cau hinh cu)",
@@ -474,7 +474,7 @@
        "late": false
       }
      ],
-     "time_mean_s": 0.2982636451721191
+     "time_mean_s": 0.32010812759399415
     }
    }
   },
@@ -572,7 +572,7 @@
        "late": false
       }
      ],
-     "time_mean_s": 0.6826639652252198
+     "time_mean_s": 0.6922389984130859
     },
     "sarsa": {
      "label": "SARSA",
@@ -646,7 +646,7 @@
        "late": false
       }
      ],
-     "time_mean_s": 0.40704774856567383
+     "time_mean_s": 0.42463021278381347
     },
     "mc": {
      "label": "Monte Carlo ES",
@@ -720,7 +720,7 @@
        "late": false
       }
      ],
-     "time_mean_s": 0.49794573783874513
+     "time_mean_s": 0.534325647354126
     }
    },
    "baseline": {
@@ -796,7 +796,7 @@
        "late": false
       }
      ],
-     "time_mean_s": 1.5177656173706056
+     "time_mean_s": 1.5388761520385743
     },
     "sarsa_cu": {
      "label": "SARSA (cau hinh cu)",
@@ -870,7 +870,7 @@
        "late": false
       }
      ],
-     "time_mean_s": 1.4283756256103515
+     "time_mean_s": 1.4609800338745118
     },
     "mc_cu": {
      "label": "Monte Carlo (cau hinh cu)",
@@ -944,7 +944,7 @@
        "late": false
       }
      ],
-     "time_mean_s": 1.5405130863189698
+     "time_mean_s": 1.6029035568237304
     }
    }
   },
@@ -1042,7 +1042,7 @@
        "late": false
       }
      ],
-     "time_mean_s": 6.7898131847381595
+     "time_mean_s": 7.874686193466187
     },
     "sarsa": {
      "label": "SARSA",
@@ -1116,7 +1116,7 @@
        "late": false
       }
      ],
-     "time_mean_s": 4.144159841537475
+     "time_mean_s": 4.0905815124511715
     },
     "mc": {
      "label": "Monte Carlo ES",
@@ -1190,7 +1190,7 @@
        "late": false
       }
      ],
-     "time_mean_s": 5.269415330886841
+     "time_mean_s": 5.090215349197388
     }
    },
    "baseline": {
@@ -1266,7 +1266,7 @@
        "late": false
       }
      ],
-     "time_mean_s": 12.725328350067139
+     "time_mean_s": 13.13591718673706
     },
     "sarsa_cu": {
      "label": "SARSA (cau hinh cu)",
@@ -1340,7 +1340,7 @@
        "late": true
       }
      ],
-     "time_mean_s": 11.876896572113036
+     "time_mean_s": 12.157090854644775
     },
     "mc_cu": {
      "label": "Monte Carlo (cau hinh cu)",
@@ -1414,7 +1414,7 @@
        "late": true
       }
      ],
-     "time_mean_s": 12.53635540008545
+     "time_mean_s": 14.86802406311035
     }
    }
   },
@@ -1512,7 +1512,7 @@
        "late": false
       }
      ],
-     "time_mean_s": 37.61313762664795
+     "time_mean_s": 42.267126369476316
     },
     "sarsa": {
      "label": "SARSA",
@@ -1586,7 +1586,7 @@
        "late": false
       }
      ],
-     "time_mean_s": 22.717845916748047
+     "time_mean_s": 25.573933696746828
     },
     "mc": {
      "label": "Monte Carlo ES",
@@ -1660,7 +1660,7 @@
        "late": false
       }
      ],
-     "time_mean_s": 37.80297517776489
+     "time_mean_s": 38.16665863990784
     }
    },
    "baseline": {
@@ -1736,7 +1736,7 @@
        "late": false
       }
      ],
-     "time_mean_s": 61.19124207496643
+     "time_mean_s": 63.733249473571775
     },
     "sarsa_cu": {
      "label": "SARSA (cau hinh cu)",
@@ -1810,7 +1810,7 @@
        "late": true
       }
      ],
-     "time_mean_s": 59.52862410545349
+     "time_mean_s": 63.12433271408081
     },
     "mc_cu": {
      "label": "Monte Carlo (cau hinh cu)",
@@ -1884,7 +1884,7 @@
        "late": true
       }
      ],
-     "time_mean_s": 84.40223708152772
+     "time_mean_s": 89.49892706871033
     }
    }
   }
@@ -2225,5 +2225,5 @@
    "decay_frac": 0.7
   }
  },
- "time_total_s": 220.51459884643555
+ "time_total_s": 227.63026213645935
 }
