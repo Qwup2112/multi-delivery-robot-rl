@@ -42,6 +42,8 @@ python convergence.py                # huấn luyện lại có đo hội tụ c
 python convergence.py --plot-only --lang en   # chỉ vẽ lại từ results/convergence.npz, nhãn tiếng Anh
 python demo.py                       # xem robot chạy 1 episode bằng policy đã học (map S4)
 python demo.py --config configs/s2_three_parcels.json --algo sarsa --gif   # map khác, thuật toán khác, lưu ảnh động
+python play.py                       # tự chơi bằng bàn phím: W/A/S/D đi, J nhặt, K giao (map S1)
+python play.py --config configs/s4_booster.json   # tự chơi map khác
 ```
 
 `demo.py` tự huấn luyện nếu chưa có bảng Q trong `results/`, nên có thể chạy ngay mà không cần `experiments.py`. Không cài `numba` thì code vẫn chạy (Python thuần), chỉ chậm hơn rất nhiều.
@@ -75,6 +77,7 @@ Project_RL/
 ├── plots.py                  # vẽ biểu đồ vào figures/
 ├── convergence.py            # đo và vẽ độ hội tụ của bảng Q về Q* (Value Iteration)
 ├── demo.py                   # demo 1 episode
+├── play.py                   # tự chơi bằng bàn phím (W/A/S/D, J, K)
 ├── colab_train.ipynb         # notebook chạy toàn bộ trên Google Colab
 ├── Nguyen_Quang_Trungg-22011211/   # báo cáo (tiếng Việt) + slide (tiếng Anh)
 ├── results/                  # kết quả: summary.json, *.npz (đường học), Q_*.npz (bảng Q), log.txt (log lần chạy đầy đủ)
@@ -103,14 +106,14 @@ Mỗi kiện có **điểm lấy** (hình tròn, chữ thường `a b c d`) và 
 
 ### Hành động (6 hành động)
 
-| Số | Hành động | Tác dụng |
-| --- | --- | --- |
-| 0 | Lên | đi lên 1 ô (đâm tường / ra ngoài thì đứng yên) |
-| 1 | Xuống | đi xuống 1 ô |
-| 2 | Trái | sang trái 1 ô |
-| 3 | Phải | sang phải 1 ô |
-| 4 | Pickup | nhặt kiện đang chờ ở ô hiện tại (nếu còn chỗ) |
-| 5 | Drop | giao kiện đang mang nếu ô hiện tại là đích của nó |
+| Số | Hành động | Phím (`play.py`) | Tác dụng |
+| --- | --- | --- | --- |
+| 0 | Lên | W | đi lên 1 ô (đâm tường / ra ngoài thì đứng yên) |
+| 1 | Xuống | S | đi xuống 1 ô |
+| 2 | Trái | A | sang trái 1 ô |
+| 3 | Phải | D | sang phải 1 ô |
+| 4 | Pickup | J | nhặt kiện đang chờ ở ô hiện tại (nếu còn chỗ) |
+| 5 | Drop | K | giao kiện đang mang nếu ô hiện tại là đích của nó |
 
 ### Điểm thưởng (reward)
 
@@ -334,6 +337,10 @@ Hàm đo không dùng bộ sinh số ngẫu nhiên nên bảng Q cuối cùng tr
 ### 5.7 `demo.py` – demo 1 episode
 
 Đọc bảng Q đã học (hoặc tự huấn luyện thuật toán được chọn bằng `--algo ql|sarsa|mc`), chạy policy tham lam từ ô S, in map dạng chữ sau mỗi bước kèm hành động, reward và sự kiện. Thêm `--gif` để lưu ảnh động.
+
+### 5.7b `play.py` – tự chơi bằng bàn phím
+
+Người chơi điều khiển robot thay cho agent, xuất phát ở ô S: **W/A/S/D** để đi, **J** để nhặt (Pickup), **K** để giao (Drop), **R** để chơi lại, **Q** để thoát. Luật và reward giống hệt lúc agent học, vì `play.py` gọi đúng `env.step()`. Sau mỗi bước, màn hình in lại map dạng chữ cùng reward, tổng điểm và sự kiện (lấy/giao kiện, thao tác sai, đâm tường, trễ deadline). Hết ván thì so với lộ trình tối ưu tính bằng Value Iteration. Ở nơi không đọc được từng phím (Colab, Git Bash), gõ cả chuỗi phím rồi Enter, ví dụ `ddddj`.
 
 ### 5.8 `colab_train.ipynb` – chạy trên Google Colab
 
@@ -708,7 +715,7 @@ Cột "Toán" là ký hiệu trong báo cáo, cột "Code" là tên biến trong
 | | đường ngang | giá trị tối ưu (Value Iteration) |
 | | vùng mờ quanh đường | trung bình ± độ lệch chuẩn qua 5 seed |
 | `ablation.png` | cột xám / cột màu | cấu hình cũ / cấu hình mới |
-| `demo.py` (map chữ) | `@` | robot |
+| `demo.py`, `play.py` (map chữ) | `@` | robot |
 | | `a` / `b` / `c` / `d` | kiện đang chờ lấy |
 | | `A` / `B` / `C` / `D` | đích chưa giao; `*` = đã giao |
 | | `+` / `o` | ô tăng tải chưa dùng / đã kích hoạt |
