@@ -95,9 +95,11 @@ p'=\begin{cases}p+\Delta(a), & a\in\{0,1,2,3\}\ \text{and}\ p+\Delta(a)\in\Open,
 
 \paragraph{3. Drop ($a=5$).} With the carried parcels whose drop cell is the current cell $I_{\mathrm{drop}}(s)=\{i:\sigma_i=1,\ v_i=p\}$,
 \begin{equation}
+\begin{gathered}
 \sigma'_i=\begin{cases}2, & i=\min I_{\mathrm{drop}}(s)\ \text{and}\ I_{\mathrm{drop}}(s)\neq\emptyset,\\ \sigma_i, & \text{otherwise},\end{cases}
-\qquad
+\\[4pt]
 b'=\begin{cases}2, & \text{a parcel was delivered},\ b=1,\ n_c(\sigma')=0,\\ \tilde b, & \text{otherwise}.\end{cases}
+\end{gathered}
 \end{equation}
 For movement actions $\sigma'=\sigma$ and $b'=\tilde b$; for Pickup $b'=b$.
 
@@ -147,10 +149,9 @@ V^{*}(s) &= \max_{a\in\Aset}\Qs(s,a),\qquad \pi^{*}(s)=\argmax_{a\in\Aset}\Qs(s,
 \end{align}
 
 \subsection{Precomputed transition tables}
-Because $f$, $r$ and $d$ are deterministic, they are stored once as three arrays indexed by the encoded state:
+Because $f$, $r$ and $d$ are deterministic, they are stored once as three arrays indexed by the encoded state, for every $s\in\Sset_R^{-}$ and $a\in\Aset$:
 \begin{equation}
-NS[\mathrm{idx}(s),a]=\mathrm{idx}\big(f(s,a)\big),\qquad R[\mathrm{idx}(s),a]=r(s,a),\qquad D[\mathrm{idx}(s),a]=d(s,a),
-\qquad s\in\Sset_R^{-},\ a\in\Aset .
+NS[\mathrm{idx}(s),a]=\mathrm{idx}\big(f(s,a)\big),\qquad R[\mathrm{idx}(s),a]=r(s,a),\qquad D[\mathrm{idx}(s),a]=d(s,a).
 \end{equation}
 A training step is then $s_{t+1}=NS[s_t,a_t]$, $r_{t+1}=R[s_t,a_t]$, $d_{t+1}=D[s_t,a_t]$.
 
@@ -240,13 +241,14 @@ With $\mathcal{C}$ the support of $\rho_{\mathrm{cell}}$ and $R^{\pi}(c)$ the un
 \begin{align}
 \mathrm{Acc}(Q) &= \frac{1}{|\mathcal{C}|}\sum_{c\in\mathcal{C}}\ind{R^{\pi_Q}(c)\ge R^{\pi_{\Qs}}(c)-10^{-9}} && \text{accuracy},\\
 e(Q) &= \frac{1}{|\Sset_R^{-}|\,|\Aset|}\sum_{s\in\Sset_R^{-}}\sum_{a\in\Aset}\big|Q(s,a)-\Qs(s,a)\big| && \text{mean Q error},\\
-\mathrm{PolAcc}(Q) &= \frac{1}{|\Sset_R^{-}|}\sum_{s\in\Sset_R^{-}}\ind{\Qs\big(s,\pi_Q(s)\big)\ge V^{*}(s)-10^{-6}} && \text{share of states with an optimal greedy action}.
+\mathrm{PolAcc}(Q) &= \frac{1}{|\Sset_R^{-}|}\sum_{s\in\Sset_R^{-}}\ind{\Qs\big(s,\pi_Q(s)\big)\ge V^{*}(s)-10^{-6}} && \text{policy accuracy}.
 \end{align}
+$\mathrm{PolAcc}$ is the share of states in $\Sset_R^{-}$ whose greedy action is optimal.
 
 %======================================================================
 \section{Summary}
 %======================================================================
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \renewcommand{\arraystretch}{1.25}
 \begin{tabular}{@{}l>{\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}p{3.6cm}@{}}
