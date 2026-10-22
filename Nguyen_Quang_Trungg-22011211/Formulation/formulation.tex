@@ -1,0 +1,269 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=2.2cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+
+\newcommand{\Sset}{\mathcal{S}}
+\newcommand{\Aset}{\mathcal{A}}
+\newcommand{\Open}{\mathcal{O}}
+\newcommand{\Walls}{\mathcal{W}}
+\newcommand{\Grid}{\mathcal{G}}
+\newcommand{\ind}[1]{\mathbf{1}\!\left[#1\right]}
+\newcommand{\Qs}{Q^{*}}
+\newcommand{\eps}{\varepsilon}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+\title{Multi-Delivery Robot: Mathematical Formulation\\[2pt]
+\large Environment (MDP), Q-Learning, SARSA and Monte Carlo ES}
+\author{Topic 13 -- Nguyen Quang Trung}
+\date{October 2026}
+
+\begin{document}
+\maketitle
+
+\noindent All equations follow the code in \texttt{delivery\_env.py}, \texttt{agents.py}, \texttt{planner.py} and \texttt{experiments.py}. Values in brackets are the settings used in the final experiments.
+
+%======================================================================
+\section{Environment as a Markov Decision Process}
+%======================================================================
+The task is a finite, deterministic, episodic MDP
+\begin{equation}
+\mathcal{M}=(\Sset,\ \Aset,\ f,\ r,\ d,\ \gamma,\ \rho_0),
+\end{equation}
+with state set $\Sset$, action set $\Aset$, deterministic transition $f$, reward $r$, termination flag $d$, discount factor $\gamma=0.99$ and start-state distribution $\rho_0$.
+
+\subsection{Map elements}
+\begin{align}
+\Grid &= \{0,\dots,H-1\}\times\{0,\dots,W-1\} && \text{grid cells},\\
+\Open &= \Grid\setminus\Walls && \text{open cells ($\Walls$ = walls)},\\
+p_S,\ p_B &\in \Open && \text{start cell (depot) and booster cell (S4 only)}.
+\end{align}
+Each parcel $i\in\{1,\dots,N\}$ has a pickup cell $u_i$, a drop cell $v_i$ and a delivery reward $R_i$ $[=20]$. At most one parcel $\delta$ has a deadline $T_d$ $[$S3: $T_d=20$, S4: $T_d=22]$. The base capacity is $\kappa_0$ $[$S1: 2, S2--S4: 1$]$ and the booster capacity is $\kappa_B=2$.
+
+\subsection{State space}
+A state is the tuple
+\begin{equation}
+s=(p,\ \sigma,\ \tau,\ b),\qquad p=(\mathrm{row},\mathrm{col})\in\Open,\quad
+\sigma\in\{0,1,2\}^{N},\quad \tau\in\{0,\dots,T_d\},\quad b\in\{0,1,2\},
+\end{equation}
+where
+\begin{align}
+\sigma_i &= \begin{cases}0 & \text{parcel $i$ waiting},\\ 1 & \text{parcel $i$ carried},\\ 2 & \text{parcel $i$ delivered},\end{cases} &
+b &= \begin{cases}0 & \text{booster unused},\\ 1 & \text{booster active},\\ 2 & \text{booster used up}.\end{cases}
+\end{align}
+$\tau\equiv 0$ on maps without a deadline and $b\equiv 0$ on maps without a booster. Two helper quantities are used below:
+\begin{align}
+n_c(\sigma) &= \sum_{i=1}^{N}\ind{\sigma_i=1} && \text{number of parcels carried},\\
+\kappa(b) &= \begin{cases}\kappa_B, & b=1,\\ \kappa_0, & \text{otherwise},\end{cases} && \text{current capacity}.
+\end{align}
+
+\subsection{State encoding}
+The parcel statuses form a base-3 number, and the tuple is packed into one integer, the row index of the Q table:
+\begin{align}
+\mathrm{code}(\sigma) &= \sum_{i=1}^{N}\sigma_i\,3^{\,i-1}\ \in\{0,\dots,3^N-1\},\\
+\mathrm{idx}(s) &= \Big(\big((\mathrm{row}\cdot W+\mathrm{col})\,3^{N}+\mathrm{code}(\sigma)\big)\,T+\tau\Big)B+b,\\
+T &= \begin{cases}T_d+1, & \text{deadline parcel exists},\\ 1, & \text{otherwise},\end{cases}\qquad
+B = \begin{cases}3, & \text{booster cell exists},\\ 1, & \text{otherwise},\end{cases}\\
+|\Sset| &= H\cdot W\cdot 3^{N}\cdot T\cdot B .
+\end{align}
+Decoding reverses the packing with integer division: $b=\mathrm{idx}\bmod B$, $\tau=\lfloor\mathrm{idx}/B\rfloor\bmod T$, and so on. Only a subset $\Sset_R\subset\Sset$ is reachable; it is the smallest set that contains every start state of $\rho_{\mathrm{cell}}$ (Section~\ref{sec:start}) and is closed under $f$ for non-terminal states (found by breadth-first search). $\Sset_R^{-}$ denotes the reachable states with at least one undelivered parcel.
+
+\subsection{Action space}
+\begin{equation}
+\Aset=\{0,1,2,3,4,5\}=\{\text{Up},\ \text{Down},\ \text{Left},\ \text{Right},\ \text{Pickup},\ \text{Drop}\},
+\end{equation}
+\begin{equation}
+\Delta(0)=(-1,0),\quad \Delta(1)=(1,0),\quad \Delta(2)=(0,-1),\quad \Delta(3)=(0,1).
+\end{equation}
+
+\subsection{Transition function}
+The environment is deterministic: $P(s'\mid s,a)=\ind{s'=f(s,a)}$. The next state $f(s,a)=(p',\sigma',\tau',b')$ is built in four steps.
+
+\paragraph{1. Move.}
+\begin{equation}
+p'=\begin{cases}p+\Delta(a), & a\in\{0,1,2,3\}\ \text{and}\ p+\Delta(a)\in\Open,\\ p, & \text{otherwise (wall, grid edge, Pickup, Drop)},\end{cases}
+\end{equation}
+\begin{equation}
+\tilde b=\begin{cases}1, & a\in\{0,1,2,3\},\ p'=p_B,\ b=0,\\ b, & \text{otherwise}.\end{cases}
+\end{equation}
+
+\paragraph{2. Pickup ($a=4$).} With the waiting parcels in the current cell $I_{\mathrm{pick}}(s)=\{i:\sigma_i=0,\ u_i=p\}$,
+\begin{equation}
+\sigma'_i=\begin{cases}1, & i=\min I_{\mathrm{pick}}(s)\ \text{and}\ I_{\mathrm{pick}}(s)\neq\emptyset\ \text{and}\ n_c(\sigma)<\kappa(b),\\ \sigma_i, & \text{otherwise}.\end{cases}
+\end{equation}
+
+\paragraph{3. Drop ($a=5$).} With the carried parcels whose drop cell is the current cell $I_{\mathrm{drop}}(s)=\{i:\sigma_i=1,\ v_i=p\}$,
+\begin{equation}
+\sigma'_i=\begin{cases}2, & i=\min I_{\mathrm{drop}}(s)\ \text{and}\ I_{\mathrm{drop}}(s)\neq\emptyset,\\ \sigma_i, & \text{otherwise},\end{cases}
+\qquad
+b'=\begin{cases}2, & \text{a parcel was delivered},\ b=1,\ n_c(\sigma')=0,\\ \tilde b, & \text{otherwise}.\end{cases}
+\end{equation}
+For movement actions $\sigma'=\sigma$ and $b'=\tilde b$; for Pickup $b'=b$.
+
+\paragraph{4. Deadline clock} (maps with a deadline parcel $\delta$):
+\begin{equation}
+\tau'=\begin{cases}T_d, & \sigma'_\delta=2 \quad\text{(delivered: time no longer matters, states merged)},\\ \tau+1, & \sigma'_\delta\neq2\ \text{and}\ \tau<T_d,\\ T_d, & \sigma'_\delta\neq2\ \text{and}\ \tau=T_d .\end{cases}
+\end{equation}
+
+\subsection{Reward function}
+\begin{equation}
+r(s,a)= r_{\mathrm{step}}
++\sum_{i=1}^{N}R_i\,\ind{\sigma_i=1,\ \sigma'_i=2}
++ r_{\mathrm{ill}}\;\mathbf{1}_{\mathrm{ill}}(s,a)
+- r_{\mathrm{late}}\;\mathbf{1}_{\mathrm{late}}(s,a),
+\end{equation}
+with $r_{\mathrm{step}}=-1$, $R_i=20$, $r_{\mathrm{ill}}=-10$, $r_{\mathrm{late}}=30$ and
+\begin{align}
+\mathbf{1}_{\mathrm{ill}}(s,a) &= \ind{a=4,\ \big(I_{\mathrm{pick}}(s)=\emptyset\ \text{or}\ n_c(\sigma)\ge\kappa(b)\big)}
++\ind{a=5,\ I_{\mathrm{drop}}(s)=\emptyset},\\
+\mathbf{1}_{\mathrm{late}}(s,a) &= \ind{\sigma'_\delta\neq2,\ \tau<T_d,\ \tau+1=T_d}.
+\end{align}
+The step cost is paid on every step, including a move into a wall; the late penalty is paid once, at the step on which the clock reaches $T_d$.
+
+\subsection{Termination, truncation and return}
+\begin{align}
+d(s,a) &= \ind{\sigma'=(2,\dots,2)} && \text{terminal: every parcel delivered},\\
+&t = t_{\max} && \text{truncated: time limit [100 / 150 / 200 / 300 for S1--S4]}.
+\end{align}
+The discounted return from step $t$ of an episode that stops at step $T_{\mathrm{end}}$ is
+\begin{equation}
+G_t=\sum_{k=0}^{T_{\mathrm{end}}-t-1}\gamma^{k}\,r_{t+k+1}.
+\end{equation}
+Truncation is a time limit, not a terminal state, so the bootstrap term is kept at a truncated step in Q-learning and SARSA.
+
+\subsection{Value functions and Bellman optimality}
+\begin{align}
+Q^{\pi}(s,a) &= \mathbb{E}_{\pi}\left[G_t \mid s_t=s,\ a_t=a\right],\\
+\Qs(s,a) &= r(s,a)+\gamma\,\big(1-d(s,a)\big)\max_{a'\in\Aset}\Qs\big(f(s,a),a'\big),\\
+V^{*}(s) &= \max_{a\in\Aset}\Qs(s,a),\qquad \pi^{*}(s)=\argmax_{a\in\Aset}\Qs(s,a).
+\end{align}
+
+\subsection{Start-state distributions}\label{sec:start}
+\begin{align}
+\rho_{S} &= \text{point mass on } (p_S,\,\mathbf{0},\,0,\,0) && \text{evaluation from S},\\
+\rho_{\mathrm{cell}} &= \mathrm{Uniform}\{(p,\mathbf{0},0,0): p\in\Open\setminus\{p_B\}\} && \text{accuracy; old training start},\\
+\rho_{\mathrm{ES}} &= \mathrm{Uniform}(\Sset_R^{-}),\qquad a_0\sim\mathrm{Uniform}(\Aset) && \text{exploring starts (new training start)}.
+\end{align}
+
+\subsection{Precomputed transition tables}
+Because $f$, $r$ and $d$ are deterministic, they are stored once as three arrays indexed by the encoded state:
+\begin{equation}
+NS[\mathrm{idx}(s),a]=\mathrm{idx}\big(f(s,a)\big),\qquad R[\mathrm{idx}(s),a]=r(s,a),\qquad D[\mathrm{idx}(s),a]=d(s,a),
+\qquad s\in\Sset_R^{-},\ a\in\Aset .
+\end{equation}
+A training step is then $s_{t+1}=NS[s_t,a_t]$, $r_{t+1}=R[s_t,a_t]$, $d_{t+1}=D[s_t,a_t]$.
+
+%======================================================================
+\section{Components shared by the three algorithms}
+%======================================================================
+\paragraph{Q table.} $Q\in\mathbb{R}^{|\Sset|\times|\Aset|}$, initialised to $Q_0$ $[=0]$.
+
+\paragraph{Greedy and $\eps$-greedy policies.} With $A^{*}(s)=\argmax_{a}Q(s,a)$,
+\begin{align}
+\pi_Q(s) &= \argmax_{a\in\Aset}Q(s,a) \qquad \text{(evaluation: first index on ties)},\\
+\pi_{\eps}(a\mid s) &= \frac{\eps}{|\Aset|}+(1-\eps)\,\frac{\ind{a\in A^{*}(s)}}{|A^{*}(s)|} \qquad \text{(training: ties broken at random)}.
+\end{align}
+
+\paragraph{Schedules.} For episode $ep$ out of $n_{ep}$, with decay fraction $f$,
+\begin{align}
+\phi(ep) &= \min\!\left(1,\ \frac{ep}{\max(1,\,f\,n_{ep})}\right),\\
+x_{\exp}(ep) &= x_s\left(\frac{x_e}{x_s}\right)^{\phi(ep)} && \text{exponential decay},\\
+x_{\mathrm{lin}}(ep) &= x_s+\phi(ep)\,(x_e-x_s) && \text{linear decay}.
+\end{align}
+
+\paragraph{Exploring starts.} Each training episode starts with $s_0\sim\rho_{\mathrm{ES}}$ and $a_0\sim\mathrm{Uniform}(\Aset)$; later actions follow the algorithm's behaviour policy. Every pair $(s,a)$ with $s\in\Sset_R^{-}$ therefore has a positive probability of being the first pair of an episode.
+
+%======================================================================
+\section{Q-learning (off-policy temporal difference)}
+%======================================================================
+After every step $(s_t,a_t,r_{t+1},s_{t+1},d_{t+1})$:
+\begin{align}
+y_t &= r_{t+1}+\gamma\,(1-d_{t+1})\max_{a'\in\Aset}Q(s_{t+1},a'),\\
+Q(s_t,a_t) &\leftarrow Q(s_t,a_t)+\alpha\,\big[y_t-Q(s_t,a_t)\big],\\
+a_{t+1} &\sim \pi_{\eps}(\cdot\mid s_{t+1}) \quad\text{(chosen after the update)}.
+\end{align}
+Settings: $\alpha=1$ (constant); $\eps$ decays exponentially from $\eps_s=1$ to $\eps_e=0.01$ with $f=0.8$. With $\alpha=1$ and a deterministic environment the update is exactly the Bellman optimality backup of one entry,
+\begin{equation}
+Q(s_t,a_t)\leftarrow r(s_t,a_t)+\gamma\,\big(1-d(s_t,a_t)\big)\max_{a'}Q\big(f(s_t,a_t),a'\big),
+\end{equation}
+so Q-learning performs asynchronous value iteration along the visited pairs and converges to $\Qs$ when every pair is updated often enough, which exploring starts provide.
+
+%======================================================================
+\section{SARSA (on-policy temporal difference)}
+%======================================================================
+The next action is drawn \emph{before} the update and is the action actually taken:
+\begin{align}
+a_{t+1} &\sim \pi_{\eps}(\cdot\mid s_{t+1}),\\
+y_t &= r_{t+1}+\gamma\,(1-d_{t+1})\,Q(s_{t+1},a_{t+1}),\\
+Q(s_t,a_t) &\leftarrow Q(s_t,a_t)+\alpha(ep)\,\big[y_t-Q(s_t,a_t)\big].
+\end{align}
+Settings: $\alpha(ep)$ decays linearly from 0.5 to 0.1 over the whole run ($f=1$); $\eps$ decays exponentially from 1 to $10^{-5}$ with $f=0.5$. The target is random through $a_{t+1}$; its expectation is
+\begin{equation}
+\mathbb{E}[y_t]=r_{t+1}+\gamma\,(1-d_{t+1})\sum_{a'}\pi_{\eps}(a'\mid s_{t+1})\,Q(s_{t+1},a'),
+\end{equation}
+so SARSA learns $Q^{\pi_\eps}$ and reaches $\Qs$ only when $\eps\to0$ while every pair is still visited (GLIE); the decaying $\alpha$ averages out the noise of $a_{t+1}$.
+
+%======================================================================
+\section{Monte Carlo with exploring starts (MC ES)}
+%======================================================================
+\paragraph{1. Generate an episode.} $s_0\sim\rho_{\mathrm{ES}}$, $a_0\sim\mathrm{Uniform}(\Aset)$, then $a_t\sim\pi_{\eps}(\cdot\mid s_t)$ with $\eps=0$ (greedy, random tie-breaking) until $d_{t}=1$ or $t=t_{\max}$; the episode stops at step $T_{\mathrm{end}}$.
+
+\paragraph{2. Returns, computed backwards.}
+\begin{equation}
+G_{T_{\mathrm{end}}}=0,\qquad G_t=r_{t+1}+\gamma\,G_{t+1},\quad t=T_{\mathrm{end}}-1,\dots,0 .
+\end{equation}
+A truncated episode is not bootstrapped: its return contains only the observed rewards.
+
+\paragraph{3. First-visit update.} With the first-visit steps
+$\mathcal{T}_{\mathrm{first}}=\{t:(s_t,a_t)\neq(s_k,a_k)\ \forall k<t\}$, for every $t\in\mathcal{T}_{\mathrm{first}}$:
+\begin{align}
+N(s_t,a_t) &\leftarrow N(s_t,a_t)+1,\\
+Q(s_t,a_t) &\leftarrow Q(s_t,a_t)+\eta\,\big[G_t-Q(s_t,a_t)\big],\qquad
+\eta=\begin{cases}\alpha=1 & \text{new settings: } Q(s_t,a_t)=G_t,\\ 1/N(s_t,a_t) & \text{old settings: sample average}.\end{cases}
+\end{align}
+With a greedy policy in a deterministic environment, $G_t$ is the exact return of the current policy from $(s_t,a_t)$, so $\eta=1$ replaces the value at once instead of averaging it with returns of older policies.
+
+%======================================================================
+\section{Value iteration (optimal reference, not a learning algorithm)}
+%======================================================================
+\begin{align}
+V_{k+1}(s) &= \max_{a\in\Aset}\Big[r(s,a)+\gamma\,\big(1-d(s,a)\big)\,V_k\big(f(s,a)\big)\Big],\qquad s\in\Sset_R^{-},\ V_0\equiv0,\\
+&\text{stop when}\ \max_{s}\big|V_{k+1}(s)-V_k(s)\big|<\theta=10^{-8},\\
+\Qs(s,a) &= r(s,a)+\gamma\,\big(1-d(s,a)\big)\,V\big(f(s,a)\big).
+\end{align}
+
+%======================================================================
+\section{Evaluation metrics}
+%======================================================================
+With $\mathcal{C}$ the support of $\rho_{\mathrm{cell}}$ and $R^{\pi}(c)$ the undiscounted return of the greedy policy from $c$ (at most $t_{\max}$ steps):
+\begin{align}
+\mathrm{Acc}(Q) &= \frac{1}{|\mathcal{C}|}\sum_{c\in\mathcal{C}}\ind{R^{\pi_Q}(c)\ge R^{\pi_{\Qs}}(c)-10^{-9}} && \text{accuracy},\\
+e(Q) &= \frac{1}{|\Sset_R^{-}|\,|\Aset|}\sum_{s\in\Sset_R^{-}}\sum_{a\in\Aset}\big|Q(s,a)-\Qs(s,a)\big| && \text{mean Q error},\\
+\mathrm{PolAcc}(Q) &= \frac{1}{|\Sset_R^{-}|}\sum_{s\in\Sset_R^{-}}\ind{\Qs\big(s,\pi_Q(s)\big)\ge V^{*}(s)-10^{-6}} && \text{share of states with an optimal greedy action}.
+\end{align}
+
+%======================================================================
+\section{Summary}
+%======================================================================
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{@{}l>{\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}p{3.6cm}@{}}
+\toprule
+ & \textbf{Q-learning} & \textbf{SARSA} & \textbf{MC ES} \\
+\midrule
+Target & $r+\gamma(1-d)\max_{a'}Q(s',a')$ & $r+\gamma(1-d)\,Q(s',a')$, $a'\sim\pi_\eps$ & $G_t=r_{t+1}+\gamma G_{t+1}$ \\
+Update & after every step & after every step & after the episode, first visit \\
+Step size & $\alpha=1$ & $\alpha$: $0.5\rightarrow0.1$ (linear) & $\eta=1$ \\
+Exploration & $\eps$: $1\rightarrow0.01$ (exp., $f=0.8$) & $\eps$: $1\rightarrow10^{-5}$ (exp., $f=0.5$) & $\eps=0$ \\
+Start & \multicolumn{3}{l}{exploring starts: $s_0\sim\rho_{\mathrm{ES}}$, $a_0\sim\mathrm{Uniform}(\Aset)$} \\
+Learns & $\Qs$ (off-policy) & $Q^{\pi_\eps}\rightarrow\Qs$ as $\eps\to0$ & $Q^{\pi_Q}\rightarrow\Qs$ \\
+Old settings & \multicolumn{3}{l}{$s_0\sim\rho_{\mathrm{cell}}$; $\eps$: $1\rightarrow0.05$ linear, $f=0.7$; TD $\alpha=0.5$; MC $\eta=1/N$} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent Common settings: $\gamma=0.99$, $Q_0=0$, episodes S1: $10^5$, S2: $3\cdot10^5$, S3: $2\cdot10^6$, S4: $6\cdot10^6$, 5 seeds, 200 evaluations per run.
+
+\end{document}

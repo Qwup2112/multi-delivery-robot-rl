@@ -79,7 +79,10 @@ Project_RL/
 ├── demo.py                   # 1-episode demo
 ├── play.py                   # play yourself with the keyboard (W/A/S/D, J, K)
 ├── colab_train.ipynb         # notebook that runs everything on Google Colab
-├── Nguyen_Quang_Trungg-22011211/   # report + slides (English)
+├── Nguyen_Quang_Trungg-22011211/   # report (Word) + slides + IEEE paper (LaTeX), all in English
+│   ├── IEEE_Paper/               #   main.tex (IEEE conference template) + figures/
+│   ├── IEEE_Paper_Overleaf.zip   #   the same, ready for Overleaf: New Project → Upload Project
+│   └── Formulation/              #   formulation.tex: equations of the environment (MDP) and the 3 algorithms
 ├── results/                  # results: summary.json, *.npz (learning curves), Q_*.npz (Q tables), log.txt (log of the full run)
 ├── figures/                  # PNG figures with Vietnamese labels
 └── figures_en/               # the same figures with English labels (plots.py --lang en), used in the report and slides
