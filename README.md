@@ -40,10 +40,14 @@ python plots.py                      # draw every figure into figures/ (Vietname
 python plots.py --lang en            # the same figures with English labels, saved to figures_en/
 python convergence.py                # retrain while measuring how Q converges to Q* (about 1–2 minutes), draws 2 figures
 python convergence.py --plot-only --lang en   # only redraw from results/convergence.npz, English labels
+python failure_cases.py              # put the robot in EVERY reachable state, find where it goes wrong (about 3–4 minutes)
+python failure_cases.py --plot-only --lang en  # only redraw from results/failure_cases.json, English labels
 python demo.py                       # watch the robot run 1 episode with the learned policy (map S4)
 python demo.py --config configs/s2_three_parcels.json --algo sarsa --gif   # another map and algorithm, save an animation
 python play.py                       # play yourself with the keyboard: W/A/S/D move, J picks up, K drops (map S1)
 python play.py --config configs/s4_booster.json   # play another map
+python app.py                        # desktop app: train with live view + control the robot (Vietnamese UI)
+python app.py --lang en              # the same app with an English UI
 ```
 
 `demo.py` trains by itself if there is no Q table in `results/` yet, so it can run without `experiments.py`. Without `numba` the code still runs (plain Python), only much slower.
@@ -76,14 +80,17 @@ Project_RL/
 ├── experiments.py            # runs every experiment, saves to results/
 ├── plots.py                  # draws the figures into figures/ (figures_en/ with --lang en)
 ├── convergence.py            # measures and plots how the Q table converges to Q* (Value Iteration)
+├── failure_cases.py          # starts the robot in every reachable state: where does each policy go wrong, and at which state code
 ├── demo.py                   # 1-episode demo
 ├── play.py                   # play yourself with the keyboard (W/A/S/D, J, K)
+├── app.py                    # desktop app (Tkinter): train with a live view, control the robot, inspect state codes
 ├── colab_train.ipynb         # notebook that runs everything on Google Colab
 ├── Nguyen_Quang_Trungg-22011211/   # report (Word) + slides + IEEE paper (LaTeX), all in English
 │   ├── IEEE_Paper/               #   main.tex (IEEE conference template) + figures/
 │   ├── IEEE_Paper_Overleaf.zip   #   the same, ready for Overleaf: New Project → Upload Project
 │   └── Formulation/              #   formulation.tex: equations of the environment (MDP) and the 3 algorithms
-├── results/                  # results: summary.json, *.npz (learning curves), Q_*.npz (Q tables), log.txt (log of the full run)
+├── results/                  # results: summary.json, *.npz (learning curves), Q_*.npz (Q tables), log.txt (log of the full run),
+│                             #   failure_cases.json + failure_states.csv (every wrong state with its state code)
 ├── figures/                  # PNG figures with Vietnamese labels
 └── figures_en/               # the same figures with English labels (plots.py --lang en), used in the report and slides
 ```
@@ -339,6 +346,17 @@ Retrains exactly the runs of `experiments.py` (same seeds, same parameters). At 
 
 The measuring function does not use the random number generator, so the final Q tables match `results/Q_*.npz` exactly. Results are saved to `results/convergence.npz` and drawn as `convergence.png` and `convergence_S2_start.png`.
 
+### 5.6c `failure_cases.py` – where does the robot go wrong?
+
+Accuracy only starts the robot at an empty cell with every parcel waiting. This script puts the robot in **every reachable state that is not finished yet** (carrying parcels, after some deliveries, with the deadline clock running, with the booster on: 184 states on S1 up to 15,604 on S4), runs the greedy policy and compares its return with Value Iteration from the same state. It checks 4 groups of runs, 5 seeds each: the new settings (seed 0 = the saved Q tables), the old settings, and on S3/S4 SARSA with 2× episodes and SARSA with final α = 0.02 (140 runs, about 3–4 minutes; use `--workers 6` if memory is short).
+
+- `rollout()` runs the greedy policy from all states at once through the tables NS, R, D and records return, steps, illegal Pickup/Drop and late penalty.
+- `analyse()` classifies each wrong state: **never finishes** (loops until max_steps), **late**, **illegal action**, **longer route**.
+- `decisions()` follows the greedy route of each wrong state to the **first state whose greedy action is not optimal under Q*** – the place where the robot actually turns wrong (it can be several steps after the start).
+- `write_states()` writes `results/failure_states.csv`: one row per wrong state with its **state code** (`idx = env.encode(state)`, the row of the Q table), the decoded tuple `(row, col, σ1..σN, τ, b)`, the mistake, the points lost, and the state code, tuple and actions of its wrong decision. For the old settings only the wrong start states are written.
+
+Draws `failure_rate.png`, `failure_old_routes.png` and `failure_sarsa_S4.png` (Section 8.8).
+
 ### 5.7 `demo.py` – a 1-episode demo
 
 Loads the learned Q table (or trains the algorithm chosen with `--algo ql|sarsa|mc`), runs the greedy policy from cell S and prints the text map after every step with the action, reward and event. Add `--gif` to save an animation.
@@ -346,6 +364,15 @@ Loads the learned Q table (or trains the algorithm chosen with `--algo ql|sarsa|
 ### 5.7b `play.py` – play with the keyboard
 
 The player drives the robot instead of the agent, starting from cell S: **W/A/S/D** to move, **J** to pick up (Pickup), **K** to deliver (Drop), **R** to restart, **Q** to quit. The rules and rewards are exactly those the agent learns with, because `play.py` calls the same `env.step()`. After every step the screen reprints the text map with the reward, the total score and the event (pickup or delivery, wrong action, bumping into a wall, missed deadline). At the end of a game your score is compared with the optimal route from Value Iteration. Where single key presses cannot be read (Colab, Git Bash), type a whole sequence of keys and press Enter, for example `ddddj`.
+
+### 5.7c `app.py` – train and control in one window
+
+`python app.py` (or `--lang en`) opens a desktop app built with Tkinter (part of Python) and matplotlib:
+
+- **Training (left):** pick the map, the algorithm (Q-learning / SARSA / MC ES), the new or old settings, episodes, seed and every hyperparameter (start states, random first action, α, final α, ε schedule, initial Q). ▶ Train runs in a separate process with the same numba functions as `agents.py`; the Q table lives in shared memory, so the map and the learning curves update while it learns. Pause / Resume / Stop at any time; "Episodes per update" (1 … 100,000, or auto = 200 updates) and "Slow down" let you watch the Q table change episode by episode. With the default settings and the same seed the result is identical to `results/Q_*.npz`. Load the Q tables of `experiments.py`, or load / save your own.
+- **Map (centre):** overlay of the greedy policy (arrows), the value V = max Q, or the cells where the greedy action is wrong compared with Q* (Value Iteration), for the current phase (parcels, τ, booster). Click a cell to put the robot there.
+- **Robot control:** the agent takes one step (Space) or runs by itself (P); you drive with W/A/S/D or the arrow keys, J = Pickup, K = Drop; R = back to S. Type a **state code** (e.g. `17419` on S4) to jump to any reachable state. At the end of an episode the return is compared with the optimal route from the same start.
+- **Current state (right):** state code, decoded tuple (row, col, σ…, τ, b), Q and Q* of the 6 actions (▶ = agent's choice, ★ = optimal), a warning when the agent's action is a wrong decision, and a step-by-step log.
 
 ### 5.8 `colab_train.ipynb` – running on Google Colab
 
@@ -455,6 +482,9 @@ Every figure exists in `figures/` (Vietnamese labels) and in `figures_en/` (Engl
 | `value_S2.png`, `value_S3.png`, `value_S4.png` | V(s) heatmap for each phase of the route (same phases as the policy figures), black line = actual route |
 | `reward_deadline.png` | S3 with a different late penalty and deadline length |
 | `env_booster.png` | S4 with and without the booster cell |
+| `failure_rate.png` | robot started in **every reachable state**: % of states where the greedy policy goes wrong, old vs new settings (+ 2 SARSA variants) |
+| `failure_old_routes.png` | old settings: the worst run on each map from S (loops in red frames, late delivery), with the state code of each loop |
+| `failure_sarsa_S4.png` | a typical SARSA mistake on S4: learned vs optimal route, red ring = wrong decision; map of where the wrong states are |
 | `demo_S4.gif` | animation of the robot running the learned policy on S4 |
 
 **How to read the policy figures:** each small panel is one "phase" (for example "carrying C · booster ON"). Grey arrows show the action the policy chooses if the robot stands in that cell during this phase; `P`/`D` mean Pickup/Drop. The coloured line is the route the robot actually takes: coloured by the parcel being carried, grey when empty-handed, black when carrying 2 parcels.
@@ -559,6 +589,25 @@ Each cell is coloured by V(s) = max Q(s, a) of the learned Q table: light blue =
 
 - The deadline is clearly visible in the heatmap. In S4 phase 2 (carrying D, τ = 15) and S3 phase 2 (carrying C, τ = 13), cells far from the destination have negative values (lowest about −11 on S4 and −12 on S3), because from there the parcel cannot arrive in time and the −30 penalty is certain. Cells near the destination are dark. Phases that still have a deadline are drawn at the τ of the start of the phase.
 - In S4 phase 8 (carrying A + B thanks to the ×2 cell), almost the whole map is dark because the robot is about to receive two +20 rewards in a row.
+
+### 8.8 Where the robot goes wrong (`failure_cases.py`)
+
+Robot started in every reachable state, % of states where the greedy policy is worse than the optimum (mean of 5 seeds):
+
+| Map (states) | Q-learning old → new | SARSA old → new | Monte Carlo old → new | SARSA, 2× episodes | SARSA, final α 0.02 |
+| --- | --- | --- | --- | --- | --- |
+| S1 (184) | 0.2% → 0 | 45% → 0 | 11% → 0 | – | – |
+| S2 (532) | 5.9% → 0 | 31% → 0 | 37% → 0 | – | – |
+| S3 (4,024) | 33% → 0 | 79% → 0.3% | 83% → 0 | 0.3% | 0 |
+| S4 (15,604) | 36% → 0 | 83% → 1.8% | 91% → 0 | 1.8% | 0.9% |
+
+![Wrong states](figures_en/failure_rate.png)
+
+- **Old settings:** wrong even from S. SARSA never finishes in 3/5 seeds on S1 and S4, Monte Carlo in 4/5 seeds on S4: the robot repeats a blocked move forever. Loop state codes: S1 `0` = (0, 0, 0, 0, 0, 0), S2 `817` = (5, 0, 1, 2, 0, 0, 0) on A's drop cell, S4 `17455` = (0, 3, 0, 0, 1, 0, 22, 1) on C's drop cell (all 4 Monte Carlo loops).
+- **New settings:** Q-learning and Monte Carlo ES are right in every state (40/40 runs). SARSA only takes a slightly longer route (at most 6 extra steps, never a loop or a late delivery).
+- **Where SARSA turns wrong:** the 301 wrong states of seed 0 on S4 come from only 39 wrong decisions, on two cells: state `190921` = (4, 2, 0, 1, 1, 0, 22, 1) (C's pickup cell, carrying B + C, booster on: Down instead of Up, 109 wrong states pass through it) and states like `17419` = (0, 3, 0, 0, 1, 0, 10, 1) (C's drop cell: Drop instead of Down). In Q* the two actions differ by only 0.03–0.04, less than SARSA's remaining error. 2× episodes does not help; a smaller final α (0.02) halves the mistakes on S4 and removes them on S3.
+
+![SARSA mistake on S4](figures_en/failure_sarsa_S4.png)
 
 ---
 
