@@ -144,7 +144,7 @@ V^{*}(s) &= \max_{a\in\Aset}\Qs(s,a),\qquad \pi^{*}(s)=\argmax_{a\in\Aset}\Qs(s,
 \subsection{Start-state distributions}\label{sec:start}
 \begin{align}
 \rho_{S} &= \text{point mass on } (p_S,\,\mathbf{0},\,0,\,0) && \text{evaluation from S},\\
-\rho_{\mathrm{cell}} &= \mathrm{Uniform}\{(p,\mathbf{0},0,0): p\in\Open\setminus\{p_B\}\} && \text{accuracy; old training start},\\
+\rho_{\mathrm{cell}} &= \mathrm{Uniform}\{(p,\mathbf{0},0,0): p\in\Open\setminus\{p_B\}\} && \text{start cells for the accuracy},\\
 \rho_{\mathrm{ES}} &= \mathrm{Uniform}(\Sset_R^{-}),\qquad a_0\sim\mathrm{Uniform}(\Aset) && \text{exploring starts (new training start)}.
 \end{align}
 
@@ -220,10 +220,9 @@ A truncated episode is not bootstrapped: its return contains only the observed r
 $\mathcal{T}_{\mathrm{first}}=\{t:(s_t,a_t)\neq(s_k,a_k)\ \forall k<t\}$, for every $t\in\mathcal{T}_{\mathrm{first}}$:
 \begin{align}
 N(s_t,a_t) &\leftarrow N(s_t,a_t)+1,\\
-Q(s_t,a_t) &\leftarrow Q(s_t,a_t)+\eta\,\big[G_t-Q(s_t,a_t)\big],\qquad
-\eta=\begin{cases}\alpha=1 & \text{new settings: } Q(s_t,a_t)=G_t,\\ 1/N(s_t,a_t) & \text{old settings: sample average}.\end{cases}
+Q(s_t,a_t) &\leftarrow Q(s_t,a_t)+\eta\,\big[G_t-Q(s_t,a_t)\big],\qquad \eta = 1:\ Q(s_t,a_t)=G_t.
 \end{align}
-With a greedy policy in a deterministic environment, $G_t$ is the exact return of the current policy from $(s_t,a_t)$, so $\eta=1$ replaces the value at once instead of averaging it with returns of older policies.
+With a greedy policy in a deterministic environment, $G_t$ is the exact return of the current policy from $(s_t,a_t)$, so $\eta=1$ replaces the value at once; a sample average $1/N(s_t,a_t)$ would keep the returns of earlier, worse policies for a long time.
 
 %======================================================================
 \section{Value iteration (optimal reference, not a learning algorithm)}
@@ -261,7 +260,6 @@ Step size & $\alpha=1$ & $\alpha$: $0.5\rightarrow0.1$ (linear) & $\eta=1$ \\
 Exploration & $\eps$: $1\rightarrow0.01$ (exp., $f=0.8$) & $\eps$: $1\rightarrow10^{-5}$ (exp., $f=0.5$) & $\eps=0$ \\
 Start & \multicolumn{3}{l}{exploring starts: $s_0\sim\rho_{\mathrm{ES}}$, $a_0\sim\mathrm{Uniform}(\Aset)$} \\
 Learns & $\Qs$ (off-policy) & $Q^{\pi_\eps}\rightarrow\Qs$ as $\eps\to0$ & $Q^{\pi_Q}\rightarrow\Qs$ \\
-Old settings & \multicolumn{3}{l}{$s_0\sim\rho_{\mathrm{cell}}$; $\eps$: $1\rightarrow0.05$ linear, $f=0.7$; TD $\alpha=0.5$; MC $\eta=1/N$} \\
 \bottomrule
 \end{tabular}
 \end{table}
