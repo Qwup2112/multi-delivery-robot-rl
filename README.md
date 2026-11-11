@@ -90,6 +90,7 @@ Project_RL/
 ├── Nguyen_Quang_Trung-22011211/   # course documents (Section 2.1)
 │   ├── Report_Topic13_MultiDeliveryRobot.docx   # course report (Word, English, Phenikaa cover page)
 │   ├── Slides_Topic13_MultiDeliveryRobot.pptx   # defence slides
+│   ├── Kich_ban_thuyet_trinh.docx               # presenter script for the slides (Vietnamese)
 │   ├── IEEE_Paper/               #   IEEE conference paper: main.tex + figures/
 │   ├── IEEE_Paper_Overleaf.zip   #   the same, ready for Overleaf (link in Section 2.1)
 │   ├── Formulation/              #   formulation.tex: equations of the environment (MDP) and the 3 algorithms
@@ -110,6 +111,7 @@ All documents are in `Nguyen_Quang_Trung-22011211/` (student Nguyen Quang Trung,
 |---|---|
 | `Report_Topic13_MultiDeliveryRobot.docx` | Full course report (36 pages): MDP, the 4 levels, the three algorithms, results, failure cases by state code, how to run the code |
 | `Slides_Topic13_MultiDeliveryRobot.pptx` | Slides for the defence (20 slides, Phenikaa cover, speaker notes, the demo video of the app embedded on slide 17) |
+| `Kich_ban_thuyet_trinh.docx` | Presenter script in Vietnamese: time plan, per-slide talking points with a thumbnail, what to stress and transitions, demo checklist, likely questions and a one-page cheat sheet |
 | `IEEE_Paper/main.tex`, `IEEE_Paper_Overleaf.zip` | Paper in the IEEE conference template (9 pages): the 4 levels from easy to very hard with their optimal routes, comparison of the algorithms, where each policy goes wrong, `play.py` and `app.py` |
 | `Formulation/formulation.tex` | The equations of the environment and the three algorithms |
 | `Phieu_Khai_Bao_Su_Dung_AI_…docx` / `.pdf` | AI usage declaration form (academic integrity), in Vietnamese |
