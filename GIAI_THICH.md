@@ -16,7 +16,7 @@ Sinh viên: Nguyễn Quang Trung · MSSV 22011211 · K16 AI&RB · Giảng viên:
 8. [Monte Carlo ES](#8-monte-carlo-es-học-sau-cả-episode)
 9. [Lịch giảm ε và α](#9-lịch-giảm-ε-và-α)
 10. [Đánh giá: độ chính xác và trạng thái sai](#10-đánh-giá-độ-chính-xác-và-trạng-thái-sai)
-11. [So sánh ba thuật toán, cấu hình cũ và cấu hình mới](#11-so-sánh-ba-thuật-toán-cấu-hình-cũ-và-cấu-hình-mới)
+11. [So sánh ba thuật toán](#11-so-sánh-ba-thuật-toán)
 12. [Câu hỏi thường gặp khi bảo vệ](#12-câu-hỏi-thường-gặp-khi-bảo-vệ)
 13. [Bảng ký hiệu: toán ↔ code](#13-bảng-ký-hiệu-toán--code)
 
@@ -247,7 +247,7 @@ Ra cùng con số như ví dụ Q-learning, nhưng ở đây là **return thật
 | Tham số | Giá trị | Lý do |
 |---|---|---|
 | $\varepsilon$ | 0 (tham lam hoàn toàn) | mọi sự khám phá đến từ exploring starts, đúng định nghĩa Monte Carlo ES |
-| $\alpha$ | 1 ($Q$ = return mới nhất) | chính sách tham lam trong môi trường tất định cho return **chính xác**; lấy trung bình $1/N$ (cấu hình cũ) thì $Q$ giữ rất lâu các return rất âm từ thời chính sách còn đi lòng vòng |
+| $\alpha$ | 1 ($Q$ = return mới nhất) | chính sách tham lam trong môi trường tất định cho return **chính xác**; nếu lấy trung bình $1/N$ thì $Q$ giữ rất lâu các return rất âm từ thời chính sách còn đi lòng vòng |
 | Bị cắt vì `max_steps` | không bootstrap ($G$ bắt đầu từ 0) | nếu robot lặp vòng 300 bước, return $\approx -(1 - 0{,}99^{300})/0{,}01 \approx -95$, nên hành động gây vòng lặp bị phạt nặng và lần sau không được chọn |
 
 **Nhược điểm:** phải đợi hết episode mới học, nên giai đoạn đầu chậm hơn Q-learning (màn 4 cần 1,74 triệu episode). Monte Carlo ES **phụ thuộc hoàn toàn vào exploring starts**: thiếu nó, độ chính xác là 0% ở màn 3 và 4. Bù lại, mỗi episode tham lam thường ngắn, nên ở màn 3 nó còn nhanh hơn Q-learning một chút (trung vị 290 nghìn so với 350 nghìn episode).
@@ -286,7 +286,7 @@ $$\text{Acc} = \frac{1}{|C|} \sum_{c \in C} \mathbf{1}\big[\, R^{\pi}(c) = R^{*}
 - $C$: tập ô xuất phát (mọi ô trống, mọi kiện đang chờ, $\tau = 0$, ô ×2 chưa dùng).
 - $\mathbf{1}[\dots]$ bằng 1 nếu return của chính sách học được từ ô $c$ **đúng bằng** return tối ưu của Value Iteration, ngược lại bằng 0.
 
-Acc là **tỉ lệ ô xuất phát mà robot đi đúng lộ trình tối ưu**. Thước đo này chặt hơn việc chỉ kiểm tra từ ô S. Ví dụ Q-learning với cấu hình cũ vẫn đi tối ưu từ S ở màn 3 trong 5/5 seed, nhưng chỉ đúng **20%** số ô xuất phát: nó "học thuộc" một lộ trình chứ chưa giải được bài toán.
+Acc là **tỉ lệ ô xuất phát mà robot đi đúng lộ trình tối ưu**. Thước đo này chặt hơn việc chỉ kiểm tra từ ô S: một chính sách có thể đi đúng từ S nhờ "học thuộc" một lộ trình, nhưng sai khi xuất phát ở ô khác. Đạt 100% nghĩa là robot giải được bài toán từ mọi ô.
 
 **Kết quả:** cả 60 lần chạy (3 thuật toán × 4 màn × 5 seed) đều kết thúc ở 100%.
 
@@ -296,12 +296,14 @@ Acc là **tỉ lệ ô xuất phát mà robot đi đúng lộ trình tối ưu**
 
 | Màn (số trạng thái) | Q-learning | SARSA | Monte Carlo ES |
 |---|---|---|---|
-| 1 (184) | 0,2% → 0 | 45% → 0 | 11% → 0 |
-| 2 (532) | 5,9% → 0 | 31% → 0 | 37% → 0 |
-| 3 (4.024) | 33% → 0 | 79% → 0,3% | 83% → 0 |
-| 4 (15.604) | 36% → 0 | 83% → 1,8% | 91% → 0 |
+| 1 (184) | 0 | 0 | 0 |
+| 2 (532) | 0 | 0 | 0 |
+| 3 (4.024) | 0 | 0–46 trạng thái (0,3%) | 0 |
+| 4 (15.604) | 0 | 273–301 trạng thái (1,8%) | 0 |
 
-(cấu hình cũ → cấu hình mới, trung bình 5 seed)
+(số trạng thái sai, khoảng trên 5 seed; trong ngoặc là tỉ lệ trung bình)
+
+Q-learning và Monte Carlo ES **đúng ở mọi trạng thái** của cả 4 màn, ở cả 5 seed. Mọi lỗi của SARSA đều là **đi đường dài hơn**: không lặp vòng, không giao trễ, không làm sai luật, và mất tối đa 6 điểm (6 bước thừa). Từ các ô xuất phát, SARSA vẫn đúng 100%, nên độ chính xác ở trên không thấy được các lỗi này.
 
 **Lỗi điển hình của SARSA ở màn 4:** từ trạng thái mã 643 (góc trên trái, đang mang C, ô ×2 bật, $\tau = 7$), SARSA đi 3 bước tới ô trả hàng của C (mã **17419**) và **giao C ngay**. Hành động tối ưu là đi Xuống để lấy A trong lúc vẫn giữ C. Giao C sớm kết thúc chuyến ×2, nên các kiện còn lại phải mang từng cái: **61 bước** (return $-11$) thay vì **55 bước** (return $-5$).
 
@@ -313,7 +315,7 @@ Lý do: trong $Q^*$, Drop và Xuống chỉ chênh **0,04** (Xuống $-9{,}89$, 
 
 ---
 
-## 11. So sánh ba thuật toán, cấu hình cũ và cấu hình mới
+## 11. So sánh ba thuật toán
 
 | | Q-learning | SARSA | Monte Carlo ES |
 |---|---|---|---|
@@ -330,26 +332,23 @@ Lý do: trong $Q^*$, Drop và Xuống chỉ chênh **0,04** (Xuống $-9{,}89$, 
 
 **Xếp hạng:** Q-learning nhanh và ổn định nhất; Monte Carlo ES thứ hai; SARSA chậm nhất và còn sai nhẹ ở vài trạng thái. Tính theo giây thì một episode SARSA lại rẻ nhất.
 
-### Cấu hình cũ khác gì và vì sao thất bại
+### Episode đầu tiên đạt độ chính xác 100%
 
-Cấu hình cũ, chạy với **cùng số episode**:
-- xuất phát ở ô trống ngẫu nhiên nhưng luôn với $\tau = 0$, $b = 0$, hành động đầu không ngẫu nhiên;
-- $\varepsilon$ giảm **tuyến tính** từ 1 xuống 0,05 trong 70% số episode đầu;
-- $\alpha = 0{,}5$ cho Q-learning và SARSA;
-- Monte Carlo lấy trung bình $1/N$.
-
-| Màn | Q-learning | SARSA | Monte Carlo |
+| Màn | Q-learning | SARSA | Monte Carlo ES |
 |---|---|---|---|
-| 1 | 100% → 100% | 55,7% → 100% | 97,4% → 100% |
-| 2 | 97,1% → 100% | 52,1% → 100% | 70,7% → 100% |
-| 3 | 20,0% → 100% | 1,1% → 100% | 0% → 100% |
-| 4 | 61,3% → 100% | 0,4% → 100% | 0% → 100% |
+| 1 | 0,5k | 5,5k – 33,5k | 7,0k – 9,5k |
+| 2 | 1,5k – 3,0k | 64,5k – 159k | 30k – 51k |
+| 3 | 340k – 400k | 980k – 1,22M | 260k – 370k |
+| 4 | 840k – 1,44M | 3,45M – 4,14M | 1,47M – 2,04M |
 
-(độ chính xác cuối: cũ → mới)
+(khoảng trên 5 seed; k = nghìn, M = triệu episode)
 
-**Nguyên nhân:** $\tau$ và $b$ nhân số trạng thái lên rất nhiều. Khi luôn xuất phát từ $\tau = 0$, phần lớn trạng thái như "đang mang C, $\tau = 15$" **gần như không bao giờ được ghé**, nên $Q$ ở đó không được học. Robot lặp vòng (đâm mãi vào tường), giao trễ, hoặc làm Pickup/Drop sai. Thêm nữa, $\varepsilon$ dừng ở 0,05 khiến SARSA học giá trị của một chính sách vẫn hành động ngẫu nhiên 5% số bước.
+### Vì sao các thiết lập này hoạt động
 
-**Cải tiến quyết định** là exploring starts (trạng thái ngẫu nhiên + hành động đầu ngẫu nhiên), cộng với lịch $\varepsilon$ và $\alpha$ riêng cho từng thuật toán.
+- **Exploring starts** là yếu tố quan trọng nhất. Biến $\tau$ và $b$ nhân số trạng thái lên rất nhiều; nếu episode nào cũng bắt đầu từ $\tau = 0$ thì các trạng thái như "đang mang C, $\tau = 15$" gần như không bao giờ được ghé. Bắt đầu từ trạng thái ngẫu nhiên với hành động đầu ngẫu nhiên thì mọi cặp $(s, a)$ đều được cập nhật trực tiếp.
+- **$\varepsilon$ riêng cho từng thuật toán:** Q-learning chỉ cần giảm tới 0,01 vì nó học $Q^*$ bất kể đang khám phá; SARSA phải giảm tới $10^{-5}$ thì giá trị nó học mới trùng $Q^*$; Monte Carlo ES dùng $\varepsilon = 0$ vì đã khám phá nhờ exploring starts.
+- **$\alpha$ phù hợp với độ nhiễu của target:** $\alpha = 1$ khi target không nhiễu (Q-learning, Monte Carlo ES tham lam), $\alpha$ giảm dần khi target có nhiễu (SARSA).
+- **Đủ số episode:** từ 100 nghìn ở màn 1 tới 6 triệu ở màn 4; numba giúp chạy hết trong vài chục giây mỗi seed.
 
 ---
 

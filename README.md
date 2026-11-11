@@ -4,7 +4,7 @@ A robot moves on a grid, picks up several parcels and delivers each one to its d
 
 There are **4 maps of increasing difficulty**. Each level adds one new mechanic: more parcels, capacity 1, a deadline, a booster cell.
 
-After the improvements, all three algorithms reach **100% accuracy on all 4 maps in 5/5 seeds**. Accuracy here is the share of start cells from which the policy follows an optimal route. The training loops are compiled with `numba`, about 150–180 times faster than plain Python, so millions of episodes run in a few tens of seconds.
+All three algorithms reach **100% accuracy on all 4 maps in 5/5 seeds**. Accuracy here is the share of start cells from which the policy follows an optimal route. The training loops are compiled with `numba`, about 150–180 times faster than plain Python, so millions of episodes run in a few tens of seconds.
 
 This document explains **every code file, every formula, the rules and the figures** as simply as possible. The course report, slides, IEEE paper and AI usage declaration are in `Nguyen_Quang_Trung-22011211/` ([Section 2.1](#21-course-documents), with a one-click Overleaf link). A Vietnamese explanation of every equation and algorithm, with worked examples and defence questions, is in [`GIAI_THICH.md`](GIAI_THICH.md). A Vietnamese walkthrough of every code file is in [`GIAI_THICH_CODE.md`](GIAI_THICH_CODE.md).
 
@@ -17,7 +17,7 @@ This document explains **every code file, every formula, the rules and the figur
 3. [Rules and the 4 levels](#3-rules-and-the-4-levels)
 4. [MDP model and the maths](#4-mdp-model-and-the-maths)
 5. [Every code file explained](#5-every-code-file-explained)
-6. [The three learning algorithms and the improvements](#6-the-three-learning-algorithms-and-the-improvements)
+6. [The three learning algorithms and their settings](#6-the-three-learning-algorithms-and-their-settings)
 7. [Experiments and figures](#7-experiments-and-figures)
 8. [Main results](#8-main-results)
 9. [Questions to expect at the defence](#9-questions-to-expect-at-the-defence)
@@ -35,7 +35,7 @@ pip install gymnasium numpy matplotlib numba
 python experiments.py                # all experiments, 5 seeds (about 4 minutes on 12 CPU cores)
 python experiments.py --quick        # quick test (2 seeds, 1/20 of the episodes, about 20 seconds)
 python experiments.py --scale 2      # double the episodes on every map (longer training)
-python experiments.py --no-baseline  # skip the comparison with the old settings (twice as fast)
+python experiments.py --no-baseline  # recommended: skip the extra baseline runs (twice as fast)
 python plots.py                      # draw every figure into figures/ (Vietnamese labels)
 python plots.py --lang en            # the same figures with English labels, saved to figures_en/
 python convergence.py                # retrain while measuring how Q converges to Q* (about 1–2 minutes), draws 2 figures
@@ -121,7 +121,7 @@ All documents are in `Nguyen_Quang_Trung-22011211/` (student Nguyen Quang Trung,
 
 Or upload the zip by hand: Overleaf → New Project → Upload Project. To compile locally: `cd Nguyen_Quang_Trung-22011211/IEEE_Paper && pdflatex main.tex` (twice, for the references).
 
-> **Note on names:** code comments, printed messages and some names are in Vietnamese without diacritics. Useful words: *kien* = parcel, *lay* = pick up, *giao* = deliver, *sai* = wrong, *tre* = late, *phat* = penalty, *cu* = old (old settings), *o tang tai* = booster cell, *suc chua* = capacity, *doc lap* = independent, *co* / *khong* = with / without. Examples: `S3_kien_deadline` = "S3, parcel with a deadline", `S4_khong_tang_tai` = "S4 without the booster cell", `ql_cu` = Q-learning with the old settings.
+> **Note on names:** code comments, printed messages and some names are in Vietnamese without diacritics. Useful words: *kien* = parcel, *lay* = pick up, *giao* = deliver, *sai* = wrong, *tre* = late, *phat* = penalty, *o tang tai* = booster cell, *suc chua* = capacity, *doc lap* = independent, *co* / *khong* = with / without. Examples: `S3_kien_deadline` = "S3, parcel with a deadline", `S4_khong_tang_tai` = "S4 without the booster cell".
 
 ---
 
@@ -179,7 +179,7 @@ Each level adds **one new mechanic** to the previous one, and the grid also grow
 "Optimal route" is computed with Value Iteration (`planner.py`). Difficulty grows on every measure: reachable states (186 → 535 → 4,027 → 15,612), optimal route length (22 → 36 → 44 → 67 steps) and the trade-offs to learn:
 
 - **S3:** without the deadline, B → A → C would be shorter (40 steps). The deadline forces the robot to deliver C first even though the total route is 4 steps longer.
-- **S4:** the robot must deliver D first to meet its deadline, then detour via the ×2 cell to carry A and B in one trip. Without the booster cell the route is 8 steps longer (Section 8.5).
+- **S4:** the robot must deliver D first to meet its deadline, then detour via the ×2 cell to carry A and B in one trip. Without the booster cell the route is 8 steps longer (Section 8.4).
 
 ---
 
@@ -308,12 +308,12 @@ The environment is **deterministic**: the same (s, a) always gives the same s'. 
 Three start modes (`start_mode`):
 
 - `"depot"`: always at cell S. Used to **evaluate** the policy.
-- `"random_cell"`: a random empty cell, all parcels waiting, τ = 0, b = 0 (like Taxi). The **old** settings trained this way. Accuracy is also measured from all these cells.
-- `"exploring"`: **any** reachable state (parcels carried or delivered, any τ and b), i.e. exploring starts. The **new** settings train this way (Section 6.5).
+- `"random_cell"`: a random empty cell, all parcels waiting, τ = 0, b = 0 (like Taxi). Accuracy is measured from all these cells.
+- `"exploring"`: **any** reachable state (parcels carried or delivered, any τ and b), i.e. exploring starts. All three algorithms train this way (Section 6.5).
 
 ### 5.3 `agents.py` – the three algorithms (compiled with numba)
 
-**Why is it fast?** The old version called gymnasium's `env.step()` at every step. Each call built a tuple, encoded it and ran `transition` in Python. The new version:
+**Why is it fast?** Calling gymnasium's `env.step()` at every step would build a tuple, encode it and run `transition` in Python each time. Instead, the training code:
 
 1. Calls `env.tables()` **once** to precompute `NS, R, D`. A step is then just `s2 = NS[s, a]; r = R[s, a]; term = D[s, a]`.
 2. Writes the training loops in plain numpy and decorates them with **numba**'s `@njit`. numba compiles the Python function to machine code on the first call and caches it, so later runs start immediately.
@@ -349,10 +349,9 @@ The result gives the **best possible return** (the horizontal "optimal" line in 
 ### 5.5 `experiments.py` – running the experiments
 
 1. For each map: compute |S|, the number of reachable states and the optimal route.
-2. **Part 1:** each map × 3 algorithms (`ql`, `sarsa`, `mc`) with the new settings × 5 seeds.
-3. **Part 3:** the same number of episodes but with the **old settings** (`ql_cu`, `sarsa_cu`, `mc_cu`) to measure the improvement. Parts 1 and 3 share one `multiprocessing.Pool`, longest jobs first.
-4. **Part 2:** reward / environment-parameter changes (late penalty 0 or 30, deadline 20 or 45, with or without the booster cell), with Q-learning, 5 seeds per variant.
-5. Saves `results/summary.json`, `results/<map>.npz` (learning curves) and `results/Q_<map>_<algorithm>.npz` (Q table of seed 0).
+2. **Part 1:** each map × 3 algorithms (`ql`, `sarsa`, `mc`) × 5 seeds, in one `multiprocessing.Pool`, longest jobs first.
+3. **Part 2:** reward / environment-parameter changes (late penalty 0 or 30, deadline 20 or 45, with or without the booster cell), with Q-learning, 5 seeds per variant.
+4. Saves `results/summary.json`, `results/<map>.npz` (learning curves) and `results/Q_<map>_<algorithm>.npz` (Q table of seed 0).
 
 Command-line options: `--quick`, `--scale`, `--seeds`, `--no-baseline`, `--workers` (Section 1).
 
@@ -372,14 +371,14 @@ The measuring function does not use the random number generator, so the final Q 
 
 ### 5.6c `failure_cases.py` – where does the robot go wrong?
 
-Accuracy only starts the robot at an empty cell with every parcel waiting. This script puts the robot in **every reachable state that is not finished yet** (carrying parcels, after some deliveries, with the deadline clock running, with the booster on: 184 states on S1 up to 15,604 on S4), runs the greedy policy and compares its return with Value Iteration from the same state. It checks 4 groups of runs, 5 seeds each: the new settings (seed 0 = the saved Q tables), the old settings, and on S3/S4 SARSA with 2× episodes and SARSA with final α = 0.02 (140 runs, about 3–4 minutes; use `--workers 6` if memory is short).
+Accuracy only starts the robot at an empty cell with every parcel waiting. This script puts the robot in **every reachable state that is not finished yet** (carrying parcels, after some deliveries, with the deadline clock running, with the booster on: 184 states on S1 up to 15,604 on S4), runs the greedy policy and compares its return with Value Iteration from the same state. It checks the runs of the project settings (5 seeds, seed 0 = the saved Q tables) and, on S3/S4, two SARSA variants: 2× episodes and final α = 0.02 (about 3–4 minutes; use `--workers 6` if memory is short).
 
 - `rollout()` runs the greedy policy from all states at once through the tables NS, R, D and records return, steps, illegal Pickup/Drop and late penalty.
 - `analyse()` classifies each wrong state: **never finishes** (loops until max_steps), **late**, **illegal action**, **longer route**.
 - `decisions()` follows the greedy route of each wrong state to the **first state whose greedy action is not optimal under Q*** – the place where the robot actually turns wrong (it can be several steps after the start).
-- `write_states()` writes `results/failure_states.csv`: one row per wrong state with its **state code** (`idx = env.encode(state)`, the row of the Q table), the decoded tuple `(row, col, σ1..σN, τ, b)`, the mistake, the points lost, and the state code, tuple and actions of its wrong decision. For the old settings only the wrong start states are written.
+- `write_states()` writes `results/failure_states.csv`: one row per wrong state with its **state code** (`idx = env.encode(state)`, the row of the Q table), the decoded tuple `(row, col, σ1..σN, τ, b)`, the mistake, the points lost, and the state code, tuple and actions of its wrong decision.
 
-Draws `failure_rate.png`, `failure_old_routes.png` and `failure_sarsa_S4.png` (Section 8.8).
+Draws `failure_sarsa_S4.png` (Section 8.7) and summary figures.
 
 ### 5.7 `demo.py` – a 1-episode demo
 
@@ -393,7 +392,7 @@ The player drives the robot instead of the agent, starting from cell S: **W/A/S/
 
 `python app.py` (or `--lang en`) opens a desktop app built with Tkinter (part of Python) and matplotlib:
 
-- **Training (left):** pick the map, the algorithm (Q-learning / SARSA / MC ES), the new or old settings, episodes, seed and every hyperparameter (start states, random first action, α, final α, ε schedule, initial Q). ▶ Train runs in a separate process with the same numba functions as `agents.py`; the Q table lives in shared memory, so the map and the learning curves update while it learns. Pause / Resume / Stop at any time; "Episodes per update" (1 … 100,000, or auto = 200 updates) and "Slow down" let you watch the Q table change episode by episode. With the default settings and the same seed the result is identical to `results/Q_*.npz`. Load the Q tables of `experiments.py`, or load / save your own.
+- **Training (left):** pick the map, the algorithm (Q-learning / SARSA / MC ES), episodes, seed and every hyperparameter (start states, random first action, α, final α, ε schedule, initial Q). ▶ Train runs in a separate process with the same numba functions as `agents.py`; the Q table lives in shared memory, so the map and the learning curves update while it learns. Pause / Resume / Stop at any time; "Episodes per update" (1 … 100,000, or auto = 200 updates) and "Slow down" let you watch the Q table change episode by episode. With the default settings and the same seed the result is identical to `results/Q_*.npz`. Load the Q tables of `experiments.py`, or load / save your own.
 - **Map (centre):** overlay of the greedy policy (arrows), the value V = max Q, or the cells where the greedy action is wrong compared with Q* (Value Iteration), for the current phase (parcels, τ, booster). Click a cell to put the robot there.
 - **Robot control:** the agent takes one step (Space) or runs by itself (P); you drive with W/A/S/D or the arrow keys, J = Pickup, K = Drop; R = back to S. Type a **state code** (e.g. `17419` on S4) to jump to any reachable state. At the end of an episode the return is compared with the optimal route from the same start.
 - **Current state (right):** state code, decoded tuple (row, col, σ…, τ, b), Q and Q* of the 6 actions (▶ = agent's choice, ★ = optimal), a warning when the agent's action is a wrong decision, and a step-by-step log.
@@ -414,7 +413,7 @@ The notebook calls the same scripts: it gets the code (Drive or GitHub), runs `p
 
 ---
 
-## 6. The three learning algorithms and the improvements
+## 6. The three learning algorithms and their settings
 
 All three learn the table **Q(s, a)** = "if I am in s, take a and play well afterwards, how many (discounted) points do I get in total". After learning, the policy is: in every state, take the action with the largest Q. The algorithms differ only in the **target** used to update Q.
 
@@ -430,7 +429,7 @@ Q(s,a) ← Q(s,a) + α · [ r + γ · max_a' Q(s',a') − Q(s,a) ]
 - If the step **really ends** the episode (every parcel delivered), the target is just r. If the episode is only **cut off by time**, γ·max Q(s') is still added.
 
 **Numeric example:** Q(s,a) = 0, r = −1, γ = 0.99, max Q(s') = 10
-→ target = −1 + 0.99·10 = 8.9 → with α = 1: new Q = **8.9** (with the α = 0.5 of the old settings: 4.45).
+→ target = −1 + 0.99·10 = 8.9 → with α = 1: new Q = **8.9**.
 
 ### 6.2 SARSA (learns after every step, on-policy)
 
@@ -474,26 +473,24 @@ G₂ = 19 → G₁ = −1 + 0.99·19 = 17.81 → G₀ = −1 + 0.99·17.81 = **1
 | ε | 1 → 0.01 (exponential, first 80%) | 1 → 10⁻⁵ (exponential, first 50%) | 0 |
 | Needs episodes to end? | no | no | yes (a cut-off episode gives a biased return) |
 
-### 6.5 Improvements over the old settings
+### 6.5 The settings and why they work
 
-Old settings: a random empty start cell, ε decaying **linearly** 1 → 0.05 over the first 70%, Q₀ = 0, α = 0.5, Monte Carlo with 1/N averaging. With those settings SARSA and Monte Carlo almost never learned S3 and S4 (Section 8.2). The changes:
+| Setting | Value | Why |
+| --- | --- | --- |
+| **Full exploring starts** | **any** reachable state + random first action | On S3 and S4 the τ and b dimensions multiply the number of states. States such as "carrying C, τ = 15" are only met when the robot walks there by itself, so without exploring starts they are rarely updated. Exploring starts update **every** pair (s, a) directly. |
+| **Per-algorithm ε schedule** | exponential; QL → 0.01, SARSA → 10⁻⁵, MC = 0 | SARSA learns the value of its own ε-greedy policy, so ε must go almost to zero for it to match Q*. Q-learning learns Q* whatever ε is. MC ES explores only through exploring starts. |
+| **Step size α** | QL 1, SARSA 0.5 → 0.1, MC 1 | Sections 6.1–6.3: α = 1 when the target has no noise, a decaying α when it has. |
+| **Episodes** | 100k / 300k / 2M / 6M | Harder maps, and SARSA needs ε → 0 slowly (Section 8.2). Made possible by numba. |
+| **numba + precomputed transitions** | `NS, R, D` + `@njit` | about 150–180 times faster per episode (Section 5.3). |
+| **Strict accuracy measure** | % of **every start cell** reaching the optimal return | Being right from S alone could mean the policy memorised one route; accuracy over every start cell shows the task is really solved. |
 
-| Improvement | Old | New | Why |
-| --- | --- | --- | --- |
-| **Full exploring starts** | random empty cell, all parcels waiting, τ = 0, b = 0 | **any** reachable state + random first action | On S3 and S4 the τ and b dimensions multiply the number of states. States such as "carrying C, τ = 15" are only met when the robot walks there by itself, so they are rarely updated. Exploring starts update **every** pair (s, a) directly. |
-| **Per-algorithm ε schedule** | linear 1 → 0.05 | exponential; QL → 0.01, SARSA → 10⁻⁵, MC = 0 | A final ε = 0.05 still makes SARSA learn the value of a "5% random" policy (biased away from Q*) and makes the MC returns noisy. |
-| **Step size α** | 0.5 (TD), 1/N (MC) | QL 1, SARSA 0.5 → 0.1, MC 1 | Sections 6.1–6.3. The 1/N average of MC "remembers" the very negative early returns forever. |
-| **More episodes** | 20k / 40k / 100k / 100k (old maps) | 100k / 300k / 2M / 6M | Harder maps, and SARSA needs ε → 0 slowly (Section 8.3). Made possible by numba. |
-| **numba + precomputed transitions** | `env.step()` in Python | `NS, R, D` + `@njit` | about 150–180 times faster per episode (Section 5.3). |
-| **Stricter accuracy measure** | policy run from S only | plus % of **every start cell** reaching the optimal return | Being right from S does not mean the task is learned: old Q-learning was optimal from S in 5/5 seeds on S3 but correct from only 20% of the start cells. |
-
-The optimistic initialisation (Q₀ = 30) of the previous version is no longer needed: exploring starts already guarantee exploration, so every algorithm uses Q₀ = 0. The parameters were chosen by tuning on these same 4 maps (5 seeds per configuration) before the final experiments.
+Every algorithm starts from Q₀ = 0: exploring starts already guarantee exploration. The parameters were chosen by tuning on these same 4 maps (5 seeds per configuration) before the final experiments.
 
 ---
 
 ## 7. Experiments and figures
 
-Training: γ = 0.99; episodes S1: 100,000 · S2: 300,000 · S3: 2,000,000 · S4: 6,000,000 (the same for all 3 algorithms, and for the old settings). Each training run is evaluated 200 times. Each evaluation runs the **greedy policy** from cell S (return, all parcels delivered or not) and from **every start cell** (accuracy). Each algorithm runs 5 seeds.
+Training: γ = 0.99; episodes S1: 100,000 · S2: 300,000 · S3: 2,000,000 · S4: 6,000,000 (the same for all 3 algorithms). Each training run is evaluated 200 times. Each evaluation runs the **greedy policy** from cell S (return, all parcels delivered or not) and from **every start cell** (accuracy). Each algorithm runs 5 seeds.
 
 **Accuracy** = % of start cells (every empty cell, every parcel waiting) from which the greedy policy reaches exactly the optimal return of Value Iteration from that cell.
 
@@ -504,7 +501,6 @@ Every figure exists in `figures/` (Vietnamese labels) and in `figures_en/` (Engl
 | `maps.png` | the 4 maps by level, pickup / drop cells, walls, booster cell |
 | `state_space.png` | encoded \|S\| and number of reachable states (log scale) |
 | `accuracy.png` | **accuracy over episodes**, mean ± standard deviation over 5 seeds |
-| `ablation.png` | **final accuracy: old vs new settings**, same number of episodes |
 | `learning_curves.png` | learning curves: return from S over episodes |
 | `success_rate.png` | fraction of seeds that deliver everything, over episodes |
 | `episode_length.png` | steps per episode during training |
@@ -516,8 +512,6 @@ Every figure exists in `figures/` (Vietnamese labels) and in `figures_en/` (Engl
 | `value_S2.png`, `value_S3.png`, `value_S4.png` | V(s) heatmap for each phase of the route (same phases as the policy figures), black line = actual route |
 | `reward_deadline.png` | S3 with a different late penalty and deadline length |
 | `env_booster.png` | S4 with and without the booster cell |
-| `failure_rate.png` | robot started in **every reachable state**: % of states where the greedy policy goes wrong, old vs new settings (+ 2 SARSA variants) |
-| `failure_old_routes.png` | old settings: the worst run on each map from S (loops in red frames, late delivery), with the state code of each loop |
 | `failure_sarsa_S4.png` | a typical SARSA mistake on S4: learned vs optimal route, red ring = wrong decision; map of where the wrong states are |
 | `demo_S4.gif` | animation of the robot running the learned policy on S4 |
 
@@ -528,8 +522,6 @@ Every figure exists in `figures/` (Vietnamese labels) and in `figures_en/` (Engl
 ## 8. Main results
 
 ![Accuracy](figures_en/accuracy.png)
-
-![Before and after the improvements](figures_en/ablation.png)
 
 ### 8.1 Summary table (final greedy policy, 5 seeds)
 
@@ -550,20 +542,9 @@ Every figure exists in `figures/` (Vietnamese labels) and in `figures_en/` (Engl
 
 All 60 runs (3 algorithms × 4 maps × 5 seeds) reach 100%. The Q tables also converge to Q*: the final mean error |Q − Q*| is 0 for Q-learning and Monte Carlo ES, and 0.01 (S3) and 0.05 (S4) for SARSA (`convergence.png`). Time per seed on S4: Q-learning 38 s, SARSA 23 s, Monte Carlo ES 38 s. The whole `experiments.py` takes 221 s on a 12-core machine.
 
-### 8.2 Before and after the improvements (same number of episodes)
+### 8.2 Effect of the number of episodes
 
-| Map | Q-learning old → new | SARSA old → new | Monte Carlo old → new |
-| --- | --- | --- | --- |
-| S1 | 100% → 100% | 55.7% → 100% | 97.4% → 100% |
-| S2 | 97.1% → 100% | 52.1% → 100% | 70.7% → 100% |
-| S3 | 20.0% → 100% | 1.1% → 100% | 0% → 100% |
-| S4 | 61.3% → 100% | 0.4% → 100% | 0% → 100% |
-
-With the old settings, on S3 and S4 SARSA and Monte Carlo either deliver late (return −18 to −30 on S3) or do not deliver everything before `max_steps` (return −290 to −330 in 3/5 SARSA seeds and 4/5 Monte Carlo seeds on S4). Old Q-learning follows the right route from S in all 5 seeds, but from other start cells it is often wrong: only 20% (S3) and 61% (S4) of the cells are correct.
-
-### 8.3 Effect of the number of episodes
-
-Measured while tuning (same maps, same new settings, 5 seeds). ε decays in proportion to the number of episodes, so fewer episodes also means that ε decays faster:
+Measured while tuning (same maps, same settings, 5 seeds). ε decays in proportion to the number of episodes, so fewer episodes also means that ε decays faster:
 
 | Map | Algorithm | Fewer episodes | More episodes |
 | --- | --- | --- | --- |
@@ -576,17 +557,17 @@ Measured while tuning (same maps, same new settings, 5 seeds). ε decays in prop
 
 To train even longer: `python experiments.py --scale 2` (or `SCALE = 2` in the Colab notebook).
 
-### 8.4 Observations
+### 8.3 Observations
 
 1. **All three algorithms learn the optimal solution on all 4 levels**, including prioritising the deadline parcel (S3, S4) and using the booster cell (S4).
 2. **Learning speed: Q-learning > Monte Carlo ES > SARSA.** On S4, Q-learning reaches 100% after about 0.8–1.4 million episodes, Monte Carlo ES after 1.5–2.0 million and SARSA after 3.5–4.1 million.
    - Q-learning learns Q* from every experience, including exploratory steps (off-policy), and its target has no noise.
    - SARSA learns the value of the exploring policy, so it only matches Q* once ε is very small. That is why SARSA's ε falls to 10⁻⁵ and it needs the most episodes.
    - Monte Carlo ES must wait for the end of the episode before updating, so it starts slower than Q-learning. But with a greedy policy in a deterministic environment the returns have no noise, so it converges exactly.
-3. **Exploring starts are the most important improvement**, especially on the deadline maps: the τ dimension creates many states that a robot starting at τ = 0 rarely reaches.
-4. **Measuring from cell S alone is not enough.** Old Q-learning is "right" from S but wrong from most other cells. Measuring from every start cell shows whether the policy has really learned the task or only memorised one route.
+3. **Exploring starts are the most important setting**, especially on the deadline maps: the τ dimension creates many states that a robot starting at τ = 0 rarely reaches.
+4. **Measuring from every start cell** shows whether the policy has really learned the task, not only one route from S.
 
-### 8.5 Reward / environment-parameter experiments
+### 8.4 Reward / environment-parameter experiments
 
 ![Deadline](figures_en/reward_deadline.png)
 
@@ -604,13 +585,13 @@ To train even longer: `python experiments.py --scale 2` (or `SCALE = 2` in the C
 
 ![Booster cell](figures_en/env_booster.png)
 
-### 8.6 Final policy
+### 8.5 Final policy
 
 ![Policy S4](figures_en/policy_S4.png)
 
 ![Policy S2](figures_en/policy_S2.png)
 
-### 8.7 Value maps (heatmaps)
+### 8.6 Value maps (heatmaps)
 
 Each cell is coloured by V(s) = max Q(s, a) of the learned Q table: light blue = low value, dark blue = high value. Hatched cells are walls. Light grey cells are impossible states, for example standing on the ×2 cell before the booster is activated.
 
@@ -624,21 +605,18 @@ Each cell is coloured by V(s) = max Q(s, a) of the learned Q table: light blue =
 - The deadline is clearly visible in the heatmap. In S4 phase 2 (carrying D, τ = 15) and S3 phase 2 (carrying C, τ = 13), cells far from the destination have negative values (lowest about −11 on S4 and −12 on S3), because from there the parcel cannot arrive in time and the −30 penalty is certain. Cells near the destination are dark. Phases that still have a deadline are drawn at the τ of the start of the phase.
 - In S4 phase 8 (carrying A + B thanks to the ×2 cell), almost the whole map is dark because the robot is about to receive two +20 rewards in a row.
 
-### 8.8 Where the robot goes wrong (`failure_cases.py`)
+### 8.7 Where the robot goes wrong (`failure_cases.py`)
 
 Robot started in every reachable state, % of states where the greedy policy is worse than the optimum (mean of 5 seeds):
 
-| Map (states) | Q-learning old → new | SARSA old → new | Monte Carlo old → new | SARSA, 2× episodes | SARSA, final α 0.02 |
+| Map (states) | Q-learning | SARSA | Monte Carlo ES | SARSA, 2× episodes | SARSA, final α 0.02 |
 | --- | --- | --- | --- | --- | --- |
-| S1 (184) | 0.2% → 0 | 45% → 0 | 11% → 0 | – | – |
-| S2 (532) | 5.9% → 0 | 31% → 0 | 37% → 0 | – | – |
-| S3 (4,024) | 33% → 0 | 79% → 0.3% | 83% → 0 | 0.3% | 0 |
-| S4 (15,604) | 36% → 0 | 83% → 1.8% | 91% → 0 | 1.8% | 0.9% |
+| S1 (184) | 0 | 0 | 0 | – | – |
+| S2 (532) | 0 | 0 | 0 | – | – |
+| S3 (4,024) | 0 | 0.3% | 0 | 0.3% | 0 |
+| S4 (15,604) | 0 | 1.8% | 0 | 1.8% | 0.9% |
 
-![Wrong states](figures_en/failure_rate.png)
-
-- **Old settings:** wrong even from S. SARSA never finishes in 3/5 seeds on S1 and S4, Monte Carlo in 4/5 seeds on S4: the robot repeats a blocked move forever. Loop state codes: S1 `0` = (0, 0, 0, 0, 0, 0), S2 `817` = (5, 0, 1, 2, 0, 0, 0) on A's drop cell, S4 `17455` = (0, 3, 0, 0, 1, 0, 22, 1) on C's drop cell (all 4 Monte Carlo loops).
-- **New settings:** Q-learning and Monte Carlo ES are right in every state (40/40 runs). SARSA only takes a slightly longer route (at most 6 extra steps, never a loop or a late delivery).
+- Q-learning and Monte Carlo ES are right in every state (40/40 runs). SARSA only takes a slightly longer route (at most 6 extra steps, never a loop or a late delivery).
 - **Where SARSA turns wrong:** the 301 wrong states of seed 0 on S4 come from only 39 wrong decisions, on two cells: state `190921` = (4, 2, 0, 1, 1, 0, 22, 1) (C's pickup cell, carrying B + C, booster on: Down instead of Up, 109 wrong states pass through it) and states like `17419` = (0, 3, 0, 0, 1, 0, 10, 1) (C's drop cell: Drop instead of Down). In Q* the two actions differ by only 0.03–0.04, less than SARSA's remaining error. 2× episodes does not help; a smaller final α (0.02) halves the mistakes on S4 and removes them on S3.
 
 ![SARSA mistake on S4](figures_en/failure_sarsa_S4.png)
@@ -672,7 +650,7 @@ numba compiles Python functions to machine code. The algorithm stays the same li
 Usually not. Free Colab has 2 CPU cores, and a GPU does not help tabular algorithms. Colab is useful to keep your own machine free during training.
 
 **Why more episodes?**
-With fewer episodes SARSA and Monte Carlo ES do not reach 100% on S3 and S4 (Section 8.3). ε decays in proportion to the number of episodes, so more episodes also means longer exploration.
+With fewer episodes SARSA and Monte Carlo ES do not reach 100% on S3 and S4 (Section 8.2). ε decays in proportion to the number of episodes, so more episodes also means longer exploration.
 
 **How does truncation differ from termination?**
 Terminal = every parcel delivered, so the future is worth 0. Truncation = `max_steps` reached, the game has not really ended, so Q-learning and SARSA still add γ·Q(s').
@@ -778,7 +756,6 @@ The "Maths" column is the notation used in the report, the "Code" column is the 
 | — | `hist` | history: `eval_ep`, `eval_return`, `eval_success`, `eval_acc`, `train_return`, `train_len` | |
 | — | `on_eval` | optional function called at every evaluation (used by `convergence.py`) | |
 | — | `ql`, `sarsa`, `mc` | the 3 algorithms with the new settings (`ALGOS`) | |
-| — | `ql_cu`, `sarsa_cu`, `mc_cu` | the same 3 algorithms with the old settings (`BASELINE`) | |
 
 ### 10.6 Value Iteration (`planner.py`)
 
@@ -820,7 +797,6 @@ The "Maths" column is the notation used in the report, the "Code" column is the 
 | learning / convergence curves | blue / teal / orange | Q-learning / SARSA / Monte Carlo ES |
 | | horizontal line | optimal value (Value Iteration) |
 | | shaded band | mean ± standard deviation over 5 seeds |
-| `ablation.png` | grey / coloured bars | old / new settings |
 | `value_*.png` (heatmaps) | light → dark blue | V(s) = max Q(s, a) low → high |
 | | hatched / light grey cell | wall / impossible state |
 | | black line | the robot's route in that phase |

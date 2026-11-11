@@ -2,7 +2,7 @@
 
 Tài liệu tiếng Việt giải thích **từng file code**: file đó làm gì, các hàm chính hoạt động thế nào, và dữ liệu đi từ đâu tới đâu. Phần toán (phương trình, ý nghĩa thuật toán) đã có trong [`GIAI_THICH.md`](GIAI_THICH.md); ở đây tập trung vào **code**.
 
-Ghi chú: comment và tên biến trong code viết tiếng Việt không dấu. Một số từ hay gặp: *kien* = kiện, *lay* = lấy, *giao* = giao, *sai* = sai, *tre* = trễ, *phat* = phạt, *cu* = cũ (cấu hình cũ), *o tang tai* = ô ×2, *suc chua* = sức chứa.
+Ghi chú: comment và tên biến trong code viết tiếng Việt không dấu. Một số từ hay gặp: *kien* = kiện, *lay* = lấy, *giao* = giao, *sai* = sai, *tre* = trễ, *phat* = phạt, *o tang tai* = ô ×2, *suc chua* = sức chứa.
 
 ## Mục lục
 
@@ -110,7 +110,7 @@ WAITING, CARRYING, DELIVERED = 0, 1, 2                  # trạng thái một ki
 - `walls`, `depot` (ô S), `booster` (ô ×2, `None` nếu không có), `free_cells` (ô trống, bỏ tường và ô ×2).
 - `dl_idx`, `deadline`: chỉ số và hạn của kiện có deadline.
 - `n_pos = H·W`, `n_codes = 3^N`, `n_tau = T_d + 1` (hoặc 1), `n_boost = 3` (hoặc 1), và `n_states` là tích của chúng.
-- `start_mode` quyết định episode bắt đầu ở đâu: `"depot"` (luôn ở S, dùng khi đánh giá), `"random_cell"` (ô trống ngẫu nhiên, mọi kiện đang chờ, dùng ở cấu hình cũ), `"exploring"` (trạng thái đạt được bất kỳ, dùng cho exploring starts).
+- `start_mode` quyết định episode bắt đầu ở đâu: `"depot"` (luôn ở S, dùng khi đánh giá), `"random_cell"` (ô trống ngẫu nhiên, mọi kiện đang chờ; dùng làm tập ô xuất phát khi tính độ chính xác), `"exploring"` (trạng thái đạt được bất kỳ, dùng cho exploring starts).
 
 ### `encode(state)` và `decode(idx)`
 
@@ -270,8 +270,6 @@ ALGOS = {   # cấu hình mới
   "sarsa": ("SARSA", sarsa,            dict(_ES, alpha=0.5, alpha_end=0.1, eps_end=1e-5, decay_frac=0.5, eps_decay="exp")),
   "mc":    ("Monte Carlo ES", monte_carlo, dict(_ES, alpha=1.0, eps_start=0.0, eps_end=0.0)),
 }
-_OLD = {"start_mode": "random_cell", "eps_end": 0.05, "decay_frac": 0.7}
-BASELINE = { "ql_cu": ..., "sarsa_cu": ..., "mc_cu": ... }     # cấu hình cũ để so sánh
 VARIANTS = [ ("S3_phat_tre_0", ...), ("S3_deadline_45", ...), ("S4_khong_tang_tai", ...), ... ]
 ```
 
@@ -290,10 +288,10 @@ Mỗi biến thể là một hàm nhỏ sửa config (ví dụ `_no_booster` tha
 ### `main()` gồm 3 phần
 
 1. **Kích thước và đáp án tối ưu** của từng màn (in ra `|S|`, số trạng thái đạt được, lộ trình tối ưu).
-2. **Phần 1 + 3:** huấn luyện song song bằng `multiprocessing.Pool` mọi tổ hợp màn × thuật toán (mới và cũ) × seed. Việc dài (màn 4, Monte Carlo) được xếp chạy trước để tận dụng CPU.
+2. **Phần 1:** huấn luyện song song bằng `multiprocessing.Pool` mọi tổ hợp màn × thuật toán × seed. Việc dài (màn 4, Monte Carlo) được xếp chạy trước để tận dụng CPU.
 3. **Phần 2:** các biến thể phần thưởng/môi trường, huấn luyện bằng thuật toán `best`.
 
-Kết quả ghi vào `results/` (xem mục 12). Tham số dòng lệnh: `--quick` (2 seed, 1/20 số episode), `--scale`, `--seeds`, `--no-baseline`, `--workers`.
+Kết quả ghi vào `results/` (xem mục 12). Tham số dòng lệnh: `--quick` (2 seed, 1/20 số episode), `--scale`, `--seeds`, `--workers`, và `--no-baseline` (nên dùng: bỏ phần chạy thêm không cần cho kết quả, nhanh gấp đôi).
 
 ---
 
@@ -307,7 +305,7 @@ Kết quả ghi vào `results/` (xem mục 12). Tham số dòng lệnh: `--quick
 | `plot_maps` | `maps.png`: 4 bản đồ |
 | `plot_state_space` | `state_space.png`: số trạng thái mã hoá và đạt được |
 | `_curves` | `learning_curves.png`, `accuracy.png`, `success_rate.png`, `episode_length.png`: đường học trung bình ± độ lệch chuẩn 5 seed |
-| `plot_final_bars`, `plot_ablation` | `final_returns.png`, `ablation.png`: so sánh cấu hình cũ và mới |
+| `plot_final_bars` | `final_returns.png`: return cuối của từng seed so với tối ưu |
 | `plot_policy` | `policy_S*.png`: chính sách theo từng pha (mũi tên) và lộ trình thật |
 | `value_grid`, `draw_heat`, `plot_value_start`, `plot_value_phases` | `value_start.png`, `value_S*.png`: bản đồ màu giá trị V = max Q |
 | `plot_variants` | `reward_deadline.png`, `env_booster.png`: các biến thể |
@@ -356,11 +354,11 @@ Thả robot vào **mọi trạng thái đạt được chưa giao xong**, chạy
 | `sai_luat` | có Pickup/Drop sai |
 | `di_vong` | chỉ đi nhiều bước hơn tối ưu |
 
-### Bốn nhóm lần chạy (5 seed mỗi nhóm)
+### Các nhóm lần chạy (5 seed mỗi nhóm)
 
-`moi` (cấu hình mới; seed 0 dùng bảng Q đã lưu), `cu` (cấu hình cũ), `sarsa_x2` (SARSA gấp đôi episode, màn 3–4), `sarsa_a002` (SARSA với α cuối 0,02, màn 3–4).
+`moi` (cấu hình của đồ án; seed 0 dùng bảng Q đã lưu), `sarsa_x2` (SARSA gấp đôi episode, màn 3–4), `sarsa_a002` (SARSA với α cuối 0,02, màn 3–4).
 
-Kết quả: `results/failure_cases.json` (tổng hợp) và `results/failure_states.csv` (mỗi trạng thái sai một dòng, kèm mã trạng thái, loại lỗi, số điểm mất, mã quyết định sai). Hình: `failure_rate.png`, `failure_old_routes.png`, `failure_sarsa_S4.png`.
+Kết quả: `results/failure_cases.json` (tổng hợp) và `results/failure_states.csv` (mỗi trạng thái sai một dòng, kèm mã trạng thái, loại lỗi, số điểm mất, mã quyết định sai). Hình: `failure_sarsa_S4.png` (lỗi điển hình của SARSA ở màn 4).
 
 ---
 
@@ -404,7 +402,7 @@ python app.py --lang en
 
 ## 11. `colab_train.ipynb` và `tools/record_app_demo.sh`
 
-**`colab_train.ipynb`** chạy cả quy trình trên Google Colab: lấy code (từ Google Drive hoặc GitHub), cài `gymnasium numba`, chạy thử `--quick`, chạy đầy đủ (biến `SCALE`, `BASELINE`), vẽ hình hai ngôn ngữ, đo hội tụ, làm ảnh động, in bảng độ chính xác, nén kết quả để tải về. Colab miễn phí thường chỉ có 2 nhân CPU nên chạy đầy đủ mất khoảng 30–45 phút; GPU không giúp gì vì học dạng bảng chạy trên CPU.
+**`colab_train.ipynb`** chạy cả quy trình trên Google Colab: lấy code (từ Google Drive hoặc GitHub), cài `gymnasium numba`, chạy thử `--quick`, chạy đầy đủ (biến `SCALE`; đặt `BASELINE = False`), vẽ hình hai ngôn ngữ, đo hội tụ, làm ảnh động, in bảng độ chính xác, nén kết quả để tải về. Colab miễn phí thường chỉ có 2 nhân CPU nên chạy đầy đủ mất khoảng 30–45 phút; GPU không giúp gì vì học dạng bảng chạy trên CPU.
 
 **`tools/record_app_demo.sh`** quay video demo (Linux): mở `app.py` trên màn hình ảo 1920×1080 (Xvfb), bấm và gõ phím bằng `xdotool` theo kịch bản cố định (huấn luyện màn 1, chạy robot, huấn luyện màn 4, lớp phủ giá trị, điều khiển tay, gõ mã 17419), và quay bằng `ffmpeg`.
 
