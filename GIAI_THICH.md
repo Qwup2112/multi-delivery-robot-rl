@@ -407,4 +407,4 @@ Môi trường ngẫu nhiên (bánh xe trượt) để xem thứ hạng thuật 
 | $G_t$ | return từ bước $t$ (Monte Carlo) | `G` trong `_mc_chunk` |
 | Acc | độ chính xác | `eval_acc` trong lịch sử huấn luyện |
 
-Xem thêm: `README.md` (giải thích từng file code, tiếng Anh), báo cáo Word và bài báo IEEE trong `Nguyen_Quang_Trung-22011211/`.
+Xem thêm: [`GIAI_THICH_CODE.md`](GIAI_THICH_CODE.md) (giải thích từng file code, tiếng Việt), `README.md` (tiếng Anh), báo cáo Word và bài báo IEEE trong `Nguyen_Quang_Trung-22011211/`.

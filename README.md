@@ -6,7 +6,7 @@ There are **4 maps of increasing difficulty**. Each level adds one new mechanic:
 
 After the improvements, all three algorithms reach **100% accuracy on all 4 maps in 5/5 seeds**. Accuracy here is the share of start cells from which the policy follows an optimal route. The training loops are compiled with `numba`, about 150–180 times faster than plain Python, so millions of episodes run in a few tens of seconds.
 
-This document explains **every code file, every formula, the rules and the figures** as simply as possible. The course report, slides, IEEE paper and AI usage declaration are in `Nguyen_Quang_Trung-22011211/` ([Section 2.1](#21-course-documents), with a one-click Overleaf link). A Vietnamese explanation of every equation and algorithm, with worked examples and defence questions, is in [`GIAI_THICH.md`](GIAI_THICH.md).
+This document explains **every code file, every formula, the rules and the figures** as simply as possible. The course report, slides, IEEE paper and AI usage declaration are in `Nguyen_Quang_Trung-22011211/` ([Section 2.1](#21-course-documents), with a one-click Overleaf link). A Vietnamese explanation of every equation and algorithm, with worked examples and defence questions, is in [`GIAI_THICH.md`](GIAI_THICH.md). A Vietnamese walkthrough of every code file is in [`GIAI_THICH_CODE.md`](GIAI_THICH_CODE.md).
 
 ---
 
