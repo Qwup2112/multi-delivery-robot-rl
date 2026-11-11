@@ -6,14 +6,14 @@ There are **4 maps of increasing difficulty**. Each level adds one new mechanic:
 
 After the improvements, all three algorithms reach **100% accuracy on all 4 maps in 5/5 seeds**. Accuracy here is the share of start cells from which the policy follows an optimal route. The training loops are compiled with `numba`, about 150–180 times faster than plain Python, so millions of episodes run in a few tens of seconds.
 
-This document explains **every code file, every formula, the rules and the figures** as simply as possible. The course report and slides are in `Nguyen_Quang_Trungg-22011211/`.
+This document explains **every code file, every formula, the rules and the figures** as simply as possible. The course report, slides, IEEE paper and AI usage declaration are in `Nguyen_Quang_Trung-22011211/` ([Section 2.1](#21-course-documents), with a one-click Overleaf link).
 
 ---
 
 ## Contents
 
 1. [Quick start (local machine and Google Colab)](#1-quick-start-local-machine-and-google-colab)
-2. [Folder structure](#2-folder-structure)
+2. [Folder structure](#2-folder-structure) · [course documents and Overleaf](#21-course-documents)
 3. [Rules and the 4 levels](#3-rules-and-the-4-levels)
 4. [MDP model and the maths](#4-mdp-model-and-the-maths)
 5. [Every code file explained](#5-every-code-file-explained)
@@ -85,10 +85,13 @@ Project_RL/
 ├── play.py                   # play yourself with the keyboard (W/A/S/D, J, K)
 ├── app.py                    # desktop app (Tkinter): train with a live view, control the robot, inspect state codes
 ├── colab_train.ipynb         # notebook that runs everything on Google Colab
-├── Nguyen_Quang_Trungg-22011211/   # report (Word) + slides + IEEE paper (LaTeX), all in English
-│   ├── IEEE_Paper/               #   main.tex (IEEE conference template) + figures/
-│   ├── IEEE_Paper_Overleaf.zip   #   the same, ready for Overleaf: New Project → Upload Project
-│   └── Formulation/              #   formulation.tex: equations of the environment (MDP) and the 3 algorithms
+├── Nguyen_Quang_Trung-22011211/   # course documents (Section 2.1)
+│   ├── Report_Topic13_MultiDeliveryRobot.docx   # course report (Word, English, Phenikaa cover page)
+│   ├── Slides_Topic13_MultiDeliveryRobot.pptx   # defence slides
+│   ├── IEEE_Paper/               #   IEEE conference paper: main.tex + figures/
+│   ├── IEEE_Paper_Overleaf.zip   #   the same, ready for Overleaf (link in Section 2.1)
+│   ├── Formulation/              #   formulation.tex: equations of the environment (MDP) and the 3 algorithms
+│   └── Phieu_Khai_Bao_Su_Dung_AI_Nguyen_Quang_Trung_22011211.docx / .pdf   # AI usage declaration form (Vietnamese)
 ├── results/                  # results: summary.json, *.npz (learning curves), Q_*.npz (Q tables), log.txt (log of the full run),
 │                             #   failure_cases.json + failure_states.csv (every wrong state with its state code)
 ├── figures/                  # PNG figures with Vietnamese labels
@@ -96,6 +99,23 @@ Project_RL/
 ```
 
 Pipeline: `configs/*.json` → `delivery_env.py` builds the environment and precomputes the transitions → `agents.py` learns the Q table → `experiments.py` saves the numbers → `plots.py` draws the figures → `demo.py` runs a demo.
+
+### 2.1 Course documents
+
+All documents are in `Nguyen_Quang_Trung-22011211/` (student Nguyen Quang Trung, ID 22011211, K16 AI&RB; supervisor MSc. Vu Hoang Dieu; Phenikaa University).
+
+| File | Content |
+|---|---|
+| `Report_Topic13_MultiDeliveryRobot.docx` | Full course report (36 pages): MDP, the 4 levels, the three algorithms, results, failure cases by state code, how to run the code |
+| `Slides_Topic13_MultiDeliveryRobot.pptx` | Slides for the defence |
+| `IEEE_Paper/main.tex`, `IEEE_Paper_Overleaf.zip` | Paper in the IEEE conference template (9 pages): the 4 levels from easy to very hard with their optimal routes, comparison of the algorithms, where each policy goes wrong, `play.py` and `app.py` |
+| `Formulation/formulation.tex` | The equations of the environment and the three algorithms |
+| `Phieu_Khai_Bao_Su_Dung_AI_…docx` / `.pdf` | AI usage declaration form (academic integrity), in Vietnamese |
+
+**Open the paper in Overleaf** (log in to Overleaf, then click; it creates a new project from `IEEE_Paper_Overleaf.zip` on `main`):
+<https://www.overleaf.com/docs?snip_uri=https%3A%2F%2Fraw.githubusercontent.com%2FQwup2112%2Fmulti-delivery-robot-rl%2Fmain%2FNguyen_Quang_Trung-22011211%2FIEEE_Paper_Overleaf.zip>
+
+Or upload the zip by hand: Overleaf → New Project → Upload Project. To compile locally: `cd Nguyen_Quang_Trung-22011211/IEEE_Paper && pdflatex main.tex` (twice, for the references).
 
 > **Note on names:** code comments, printed messages and some names are in Vietnamese without diacritics. Useful words: *kien* = parcel, *lay* = pick up, *giao* = deliver, *sai* = wrong, *tre* = late, *phat* = penalty, *cu* = old (old settings), *o tang tai* = booster cell, *suc chua* = capacity, *doc lap* = independent, *co* / *khong* = with / without. Examples: `S3_kien_deadline` = "S3, parcel with a deadline", `S4_khong_tang_tai` = "S4 without the booster cell", `ql_cu` = Q-learning with the old settings.
 
