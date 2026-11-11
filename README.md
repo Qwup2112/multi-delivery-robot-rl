@@ -48,6 +48,8 @@ python play.py                       # play yourself with the keyboard: W/A/S/D 
 python play.py --config configs/s4_booster.json   # play another map
 python app.py                        # desktop app: train with live view + control the robot (Vietnamese UI)
 python app.py --lang en              # the same app with an English UI
+python video.py                      # demo video: the robot plays all 4 levels -> figures/demo_all_levels.mp4 (about 1 minute)
+python video.py --lang en            # the same video with English text -> figures_en/demo_all_levels.mp4
 ```
 
 `demo.py` trains by itself if there is no Q table in `results/` yet, so it can run without `experiments.py`. Without `numba` the code still runs (plain Python), only much slower.
@@ -84,6 +86,7 @@ Project_RL/
 ├── demo.py                   # 1-episode demo
 ├── play.py                   # play yourself with the keyboard (W/A/S/D, J, K)
 ├── app.py                    # desktop app (Tkinter): train with a live view, control the robot, inspect state codes
+├── video.py                  # records the demo video (MP4) of the learned policy on all 4 levels
 ├── colab_train.ipynb         # notebook that runs everything on Google Colab
 ├── Nguyen_Quang_Trung-22011211/   # course documents (Section 2.1)
 │   ├── Report_Topic13_MultiDeliveryRobot.docx   # course report (Word, English, Phenikaa cover page)
@@ -393,6 +396,10 @@ The player drives the robot instead of the agent, starting from cell S: **W/A/S/
 - **Map (centre):** overlay of the greedy policy (arrows), the value V = max Q, or the cells where the greedy action is wrong compared with Q* (Value Iteration), for the current phase (parcels, τ, booster). Click a cell to put the robot there.
 - **Robot control:** the agent takes one step (Space) or runs by itself (P); you drive with W/A/S/D or the arrow keys, J = Pickup, K = Drop; R = back to S. Type a **state code** (e.g. `17419` on S4) to jump to any reachable state. At the end of an episode the return is compared with the optimal route from the same start.
 - **Current state (right):** state code, decoded tuple (row, col, σ…, τ, b), Q and Q* of the 6 actions (▶ = agent's choice, ★ = optimal), a warning when the agent's action is a wrong decision, and a step-by-step log.
+
+### 5.7d `video.py` – demo video of all 4 levels
+
+`python video.py` records an MP4 video (1280×720, about 90 s) in which the robot plays the 4 levels one after another with the learned Q table: `figures/demo_all_levels.mp4` (Vietnamese text) or, with `--lang en`, `figures_en/demo_all_levels.mp4`. Each level starts with a title card (level, new mechanic, grid size), then the robot moves smoothly cell by cell and pauses at every pickup and delivery. The panel on the right shows the step, the return so far, the status of every parcel, the deadline clock τ, the ×2 cell and the latest events; at the end of each level the return is compared with the optimal return from Value Iteration, and a final card sums up the four levels. `--algo sarsa` or `--algo mc` shows another algorithm, `--levels S3 S4` records only some levels. It needs `ffmpeg` (preinstalled on Colab and most Linux systems; on Windows install it and add it to PATH) and takes about one minute.
 
 ### 5.8 `colab_train.ipynb` – running on Google Colab
 
