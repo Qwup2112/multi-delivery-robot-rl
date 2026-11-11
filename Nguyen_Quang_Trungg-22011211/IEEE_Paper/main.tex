@@ -26,7 +26,7 @@ Hanoi, Vietnam}
 \maketitle
 
 \begin{abstract}
-A robot on a grid must pick up several parcels and deliver each one to its own drop cell, choosing the order by itself. We model the task as a deterministic Markov decision process with four maps of increasing difficulty: more parcels, a capacity of one, a delivery deadline, and a booster cell that doubles the capacity for one trip. A deadline clock and a booster flag are added to the state to keep it Markov, which brings the largest map to 357,696 encoded states (15,612 reachable). We compare three tabular methods, Q-learning, SARSA and Monte Carlo with exploring starts (MC ES), trained with exploring starts, algorithm-specific exploration schedules and a numba-compiled training loop that is about 150--180 times faster than a Python loop. Accuracy is measured as the share of start cells from which the greedy policy reaches the optimal return computed by value iteration. All three methods reach 100\% accuracy on all four maps in 5/5 seeds, against 0--61\% with the original settings on the two hardest maps. Q-learning learns fastest, MC ES is second and SARSA needs about three times as many episodes. Changing the late penalty, the deadline or the booster cell changes the learned delivery order exactly as the optimal solution predicts.
+A robot on a grid must pick up several parcels and deliver each one to its own drop cell, choosing the order by itself. We model the task as a deterministic Markov decision process with four maps of increasing difficulty: more parcels, a capacity of one, a delivery deadline, and a booster cell that doubles the capacity for one trip. A deadline clock and a booster flag are added to the state to keep it Markov, which brings the largest map to 357,696 encoded states (15,612 reachable). We compare three tabular methods, Q-learning, SARSA and Monte Carlo with exploring starts (MC ES), trained with exploring starts, algorithm-specific exploration schedules and a numba-compiled training loop that is about 150--180 times faster than a Python loop. Accuracy is measured as the share of start cells from which the greedy policy reaches the optimal return computed by value iteration. All three methods reach 100\% accuracy on all four maps in 5/5 seeds, against 0--61\% with the original settings on the two hardest maps. Q-learning learns fastest, MC ES is second and SARSA needs about three times as many episodes. Changing the late penalty, the deadline or the booster cell changes the learned delivery order exactly as the optimal solution predicts. Started in every reachable state rather than only at a start cell, Q-learning and MC ES are never wrong, while SARSA takes a slightly longer route from 0.3\% of the states on level 3 and 1.8\% on level 4, which we trace to a few dozen wrong decisions identified by their state codes.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -40,10 +40,11 @@ The environment extends the Taxi domain \cite{b4}, \cite{b5} from one passenger 
 
 The contributions are:
 \begin{itemize}
-\item a \texttt{gymnasium} environment \cite{b5} with four maps of increasing difficulty, each adding one mechanic, and a Markov state that includes a deadline clock and a booster flag;
+\item a \texttt{gymnasium} environment \cite{b5} with four levels, from easy to very hard, each adding one mechanic, and a Markov state that includes a deadline clock and a booster flag;
 \item a comparison of Q-learning \cite{b2}, SARSA \cite{b3} and MC ES \cite{b1} under the same exploring-starts protocol, with exploration schedules chosen per algorithm;
 \item a strict accuracy measure over every start cell, and an ablation showing that exploring starts and the new schedules raise accuracy from as low as 0\% to 100\%;
-\item experiments that change the reward and the environment, and value heatmaps that show how the deadline and the booster appear in the learned values.
+\item experiments that change the reward and the environment, and value heatmaps that show how the deadline and the booster appear in the learned values;
+\item a check of every reachable state that finds where each policy goes wrong, level by level, and traces every mistake to a state code, together with a keyboard game and a desktop app that use the same rules.
 \end{itemize}
 
 \section{Environment and MDP Formulation}
@@ -67,12 +68,19 @@ The parcel statuses are read as a base-3 number, and the tuple is packed into on
 with $T=T_d+1$ on maps with a deadline ($T=1$ otherwise) and $B=3$ on the map with a booster ($B=1$ otherwise). The encoded size is $|S|=H\,W\,3^{N}\,T\,B$. Far fewer states are reachable (Table~\ref{tab:levels}): walls cannot be occupied, a capacity of one excludes two carried parcels, and $\tau$ and $b$ only take values that can actually occur. The reachable set is found by breadth-first search.
 
 \subsection{Four Levels}
-Each map adds one mechanic to the previous one (Fig.~\ref{fig:maps}, Table~\ref{tab:levels}). S1 has two parcels that can be carried together. S2 has three parcels and a capacity of one, so the order matters. S3 requires parcel C to be delivered within 20 steps. S4 has four parcels, a 22-step deadline for parcel D and a booster cell that allows two parcels to be carried for one trip; the trip ends the first time the robot is empty-handed after a Drop. S3 and S4 contain trade-offs: on S3 the route $B\rightarrow A\rightarrow C$ would be 4 steps shorter without the deadline, and on S4 the robot must deliver D first and then detour through the booster cell to carry A and B together, which saves 8 steps.
+The four maps S1--S4 are four levels of increasing difficulty: level 1 (easy), level 2 (medium), level 3 (hard) and level 4 (very hard). Each level adds one mechanic to the previous one and the grid grows from $5\times5$ to $8\times8$ (Fig.~\ref{fig:maps}, Table~\ref{tab:levels}). Every map is a JSON file, so a level can be changed without changing the code. The robot always starts at S in the top-left cell $(0,0)$; cells are written as (row, column) with row 0 at the top, pickup cells in lowercase and drop cells in uppercase. The optimal route of each level, computed by value iteration, is:
+\begin{itemize}
+\item \emph{S1, level 1 (easy), $5\times5$, capacity 2.} Parcel A goes from a $(0,4)$ to A $(4,0)$ and B from b $(4,4)$ to B $(0,2)$; a short wall in column 2 blocks the direct path. The robot picks up a (step 5) and b (step 10), carries both, and delivers A (step 15) and then B (step 22): 22 steps, return 18. The new mechanic is only that two parcels can be carried together.
+\item \emph{S2, level 2 (medium), $6\times6$, capacity 1.} Three parcels, A: $(0,4)\rightarrow(5,0)$, B: $(3,0)\rightarrow(1,4)$, C: $(5,5)\rightarrow(2,2)$, and more walls. Since only one parcel fits, the order matters: the robot delivers B (picked up at step 4, delivered at step 11), then A (13, 23), then C (29, 36): 36 steps, return 24.
+\item \emph{S3, level 3 (hard), $7\times7$, capacity 1.} A: $(0,6)\rightarrow(2,0)$, B: $(2,3)\rightarrow(0,3)$, and C: $(6,6)\rightarrow(6,0)$ with a 20-step deadline and a $-30$ penalty. The robot goes straight to the bottom-right corner and delivers C at step 20, exactly on the deadline, then B (28, 31) and A (35, 44): 44 steps, return 16. Without the deadline, $B\rightarrow A\rightarrow C$ would take only 40 steps.
+\item \emph{S4, level 4 (very hard), $8\times8$, capacity 1 (2 with the booster).} A: $(0,7)\rightarrow(7,0)$, B: $(1,7)\rightarrow(7,1)$, C: $(4,2)\rightarrow(0,3)$, D: $(7,7)\rightarrow(4,4)$ with a 22-step deadline, and the $\times2$ booster cell at $(3,0)$. Entering the booster cell lets the robot carry two parcels; the trip ends the first time it is empty-handed after a Drop, and the cell works once per episode. The robot first delivers D (picked up at step 15, delivered at step 22, exactly on the deadline), then C (27, 33), switches the booster on at step 39, picks up A (50) and B (52) in the top-right corner and delivers B (65) and A (67) in the bottom-left corner: 67 steps, return 13. Without the booster cell the best route needs four separate trips and 75 steps.
+\end{itemize}
+Levels 3 and 4 therefore contain trade-offs that a greedy nearest-parcel rule would miss: the deadline parcel must come first although it is far away, and the detour to the booster cell pays off by 8 steps.
 
 \begin{figure*}[!t]
 \centering
 \includegraphics[width=\textwidth]{maps.png}
-\caption{The four maps by level. Pickup cells are circles (lowercase letters), drop cells are squares (uppercase letters), walls are dark and the $\times 2$ booster cell is yellow.}
+\caption{The four maps by level, from level 1 (easy, S1) to level 4 (very hard, S4). The robot starts at S. Pickup cells are circles (lowercase letters), drop cells are squares (uppercase letters), walls are dark and the $\times 2$ booster cell is yellow.}
 \label{fig:maps}
 \end{figure*}
 
@@ -82,14 +90,14 @@ Each map adds one mechanic to the previous one (Fig.~\ref{fig:maps}, Table~\ref{
 \centering
 \footnotesize
 \begin{adjustbox}{max width=\textwidth}
-\begin{tabular}{|c|c|c|c|p{4.6cm}|r|r|c|c|}
+\begin{tabular}{|c|c|c|c|c|p{4.6cm}|r|r|c|c|}
 \hline
-\textbf{Map} & \textbf{Grid} & \textbf{Parcels} & \textbf{Capacity} & \textbf{New mechanic} & \textbf{Encoded $|S|$} & \textbf{Reachable} & \textbf{Optimal route (steps, return)} & \textbf{max\_steps} \\
+\textbf{Map} & \textbf{Level} & \textbf{Grid} & \textbf{Parcels} & \textbf{Capacity} & \textbf{New mechanic} & \textbf{Encoded $|S|$} & \textbf{Reachable} & \textbf{Optimal route (steps, return)} & \textbf{max\_steps} \\
 \hline
-S1 & $5\times5$ & 2 & 2 & two parcels carried together & 225 & 186 & $A\rightarrow B$ (22, 18) & 100 \\
-S2 & $6\times6$ & 3 & 1 & one parcel at a time, order matters & 972 & 535 & $B\rightarrow A\rightarrow C$ (36, 24) & 150 \\
-S3 & $7\times7$ & 3 & 1 & parcel C within 20 steps & 27,783 & 4,027 & $C\rightarrow B\rightarrow A$ (44, 16) & 200 \\
-S4 & $8\times8$ & 4 & 1 (2 with booster) & booster cell and parcel D within 22 steps & 357,696 & 15,612 & $D\rightarrow C\rightarrow B\rightarrow A$ (67, 13) & 300 \\
+S1 & 1 (easy) & $5\times5$ & 2 & 2 & two parcels carried together & 225 & 186 & $A\rightarrow B$ (22, 18) & 100 \\
+S2 & 2 (medium) & $6\times6$ & 3 & 1 & one parcel at a time, order matters & 972 & 535 & $B\rightarrow A\rightarrow C$ (36, 24) & 150 \\
+S3 & 3 (hard) & $7\times7$ & 3 & 1 & parcel C within 20 steps & 27,783 & 4,027 & $C\rightarrow B\rightarrow A$ (44, 16) & 200 \\
+S4 & 4 (very hard) & $8\times8$ & 4 & 1 (2 with booster) & booster cell and parcel D within 22 steps & 357,696 & 15,612 & $D\rightarrow C\rightarrow B\rightarrow A$ (67, 13) & 300 \\
 \hline
 \end{tabular}
 \end{adjustbox}
@@ -139,6 +147,9 @@ This is stricter than checking the single start cell S, as Section~\ref{sec:abla
 
 \subsection{Implementation}
 Since the environment is deterministic, the transition function is precomputed once into three arrays: next state $NS[s,a]$, reward $R[s,a]$ and termination flag $D[s,a]$. The training loops only look up these arrays and are compiled with numba \cite{b6}. On S2 with 20,000 episodes, one Q-learning run drops from 10.7~s to 0.06~s and one MC run from 15.4~s to 0.10~s, a speed-up of about 150--180 times. Table~\ref{tab:hyper} lists the final settings, which were tuned on the same four maps with 5 seeds.
+
+\subsection{Playing the Levels and the Desktop App}
+Two tools use exactly the same \texttt{env.step()} as the agents. In \texttt{play.py} a person plays any level with the keyboard (W/A/S/D to move, J to pick up, K to drop) on a text map, and at the end the score is compared with the optimal route; this makes the rules and the trade-offs of levels 3 and 4 easy to check by hand. \texttt{app.py} is a Tkinter desktop app: it trains any algorithm on any level with the same compiled loops while the map and the learning curves update live, overlays the greedy policy, the value $V=\max_a Q$ or the cells where the greedy action is not optimal under $\Qs$, and lets the user drive the robot, step the agent, or jump to any reachable state by typing its state code $\mathrm{idx}$ from \eqref{eq:idx}, showing $Q$ and $\Qs$ for the six actions.
 
 \begin{table}[!t]
 \caption{Hyperparameters (New Settings)}
@@ -310,11 +321,51 @@ S4: no booster cell & $D\rightarrow B\rightarrow C\rightarrow A$, 75 steps, retu
 \end{adjustbox}
 \end{table}
 
+\subsection{Where Does the Robot Go Wrong?}\label{sec:failure}
+Accuracy only starts the robot with every parcel waiting, $\tau=0$ and the booster unused. A policy can be right there and wrong in states it seldom reaches, for example after it has been pushed off its route. We therefore start the greedy policy in every reachable unfinished state (184 on S1, 532 on S2, 4,024 on S3 and 15,604 on S4) and call a state wrong when the policy collects less than the optimal return from it. Each wrong state is classified as never finishing, a late delivery, an illegal Pickup/Drop or a longer route, and the greedy route is followed to the first state whose action is not optimal under $\Qs$, the \emph{wrong decision}, which is reported by its state code. Checking one Q table takes less than a second.
+
+Table~\ref{tab:failure} and Fig.~\ref{fig:failure} give the results per level. With the old settings, mistakes already appear on the easy levels (0.2--45\% of the states, loops and longer routes) and grow to 33--91\% on levels 3 and 4, where late deliveries and illegal actions also appear; 10 of the 11 loops from S repeat a blocked move into a wall or the edge of the map. With the new settings, Q-learning and MC ES are right in every reachable state on all four levels in 5/5 seeds. SARSA is right everywhere on levels 1 and 2, but takes a longer route from 0.3\% of the states on level 3 and 1.8\% on level 4, losing at most 6 points and never looping or delivering late.
+
+\begin{table}[!t]
+\caption{Share of Reachable States Where the Greedy Policy Is Wrong (Mean of 5 Seeds): Old $\rightarrow$ New Settings}
+\label{tab:failure}
+\centering
+\footnotesize
+\begin{adjustbox}{max width=\columnwidth}
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{Level (states)} & \textbf{Q-learning} & \textbf{SARSA} & \textbf{MC ES} \\
+\hline
+1, S1 (184) & 0.2\% $\rightarrow$ 0 & 45\% $\rightarrow$ 0 & 11\% $\rightarrow$ 0 \\
+2, S2 (532) & 5.9\% $\rightarrow$ 0 & 31\% $\rightarrow$ 0 & 37\% $\rightarrow$ 0 \\
+3, S3 (4,024) & 33\% $\rightarrow$ 0 & 79\% $\rightarrow$ 0.3\% & 83\% $\rightarrow$ 0 \\
+4, S4 (15,604) & 36\% $\rightarrow$ 0 & 83\% $\rightarrow$ 1.8\% & 91\% $\rightarrow$ 0 \\
+\hline
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.9\textwidth]{failure_rate.png}
+\caption{Robot started in every reachable state: share of states where the greedy policy goes wrong, per level (bar: mean, dots: 5 seeds). For SARSA the variants with twice as many episodes and with final $\alpha=0.02$ are also shown.}
+\label{fig:failure}
+\end{figure*}
+
+Fig.~\ref{fig:failure_s4} shows the costliest SARSA state on level 4: the robot is at $(0,0)$ carrying C with the booster on and $\tau=7$. SARSA delivers C at once, which ends the booster trip, and needs 61 steps (return $-11$); the optimal route first fetches A while still holding C and then carries A and B together (55 steps, return $-5$). The wrong decision is at state code 17419, $(0,3,0,0,1,0,10,1)$ on C's drop cell, where SARSA drops C instead of moving down; the two actions differ by only 0.04 in $\Qs$, less than the error of SARSA's Q values. All 301 wrong states of this seed come from 39 wrong decisions on two cells, C's pickup and drop cells. Twice as many episodes do not help (1.8\%), whereas a final step size of 0.02 halves the wrong states on level 4 and removes them on level 3, which points to the noise of SARSA's target rather than to too little training.
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{failure_sarsa_S4.png}
+\caption{Level 4, SARSA (new settings, seed 0): the costliest wrong state, learned route (left) against the optimal route (middle), with the wrong decision circled in red; right: robot position in the wrong states of all 5 seeds.}
+\label{fig:failure_s4}
+\end{figure*}
+
 \section{Discussion}
 The results hold for a deterministic environment. There, Q-learning and MC ES benefit from noise-free targets; with stochastic moves (for example wheel slip) this advantage would shrink and the ranking could change. Exploring starts require a simulator that can place the robot in any state, which is easy here but not on a real robot. The deadline clock makes the state space grow linearly with the deadline length, and a Q table is tied to one grid, so every map is trained separately. Finally, the hyperparameters were tuned on the same four maps that are reported.
 
 \section{Conclusion}
-Tabular Q-learning, SARSA and MC ES all learn the optimal pickup and delivery order on four maps of increasing difficulty, reaching 100\% accuracy over every start cell in 5/5 seeds. Exploring starts and algorithm-specific exploration schedules are the decisive improvements, raising accuracy from 0--61\% to 100\% on the hardest maps. Q-learning learns fastest and most stably, MC ES is second, and SARSA needs about three times as many episodes. The learned policies react to changes in the late penalty, the deadline and the booster cell exactly as the optimal solution predicts, and the learned values make the deadline visible as a region of negative value. Future work includes a stochastic version of the environment, Expected SARSA and Q($\lambda$), and function approximation so that one model can serve several maps.
+Tabular Q-learning, SARSA and MC ES all learn the optimal pickup and delivery order on four maps of increasing difficulty, reaching 100\% accuracy over every start cell in 5/5 seeds. Exploring starts and algorithm-specific exploration schedules are the decisive improvements, raising accuracy from 0--61\% to 100\% on the hardest maps. Q-learning learns fastest and most stably, MC ES is second, and SARSA needs about three times as many episodes. The learned policies react to changes in the late penalty, the deadline and the booster cell exactly as the optimal solution predicts, and the learned values make the deadline visible as a region of negative value. Checking every reachable state shows that Q-learning and MC ES are optimal everywhere, while SARSA's few remaining mistakes on levels 3 and 4 come from a few dozen near-ties in $\Qs$. Future work includes a stochastic version of the environment, Expected SARSA and Q($\lambda$), and function approximation so that one model can serve several maps.
 
 \begin{thebibliography}{00}
 \bibitem{b9} S. N. Parragh, K. F. Doerner, and R. F. Hartl, ``A survey on pickup and delivery problems. Part II: Transportation between pickup and delivery locations,'' \textit{J. f\"{u}r Betriebswirtschaft}, vol. 58, no. 2, pp. 81--117, 2008.
