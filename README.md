@@ -89,6 +89,8 @@ Project_RL/
 ├── colab_train.ipynb         # notebook that runs everything on Google Colab
 ├── Nguyen_Quang_Trung-22011211/   # course documents (Section 2.1)
 │   ├── Report_Topic13_MultiDeliveryRobot.docx   # course report (Word, English, Phenikaa cover page)
+│   ├── Report_LaTeX/ + Report_LaTeX_Overleaf.zip # the same report in LaTeX, Phenikaa cover (Section 2.1)
+│   ├── Report_Topic13_MultiDeliveryRobot.pdf    # the LaTeX report compiled to PDF
 │   ├── Slides_Topic13_MultiDeliveryRobot.pptx   # defence slides
 │   ├── Kich_ban_thuyet_trinh.docx               # presenter script for the slides (Vietnamese)
 │   ├── IEEE_Paper/               #   IEEE conference paper: main.tex + figures/
@@ -110,6 +112,7 @@ All documents are in `Nguyen_Quang_Trung-22011211/` (student Nguyen Quang Trung,
 | File | Content |
 |---|---|
 | `Report_Topic13_MultiDeliveryRobot.docx` | Full course report (30 pages): MDP, the 4 levels, the three algorithms, results, failure cases by state code, how to run the code |
+| `Report_LaTeX/main.tex`, `Report_LaTeX_Overleaf.zip`, `Report_Topic13_MultiDeliveryRobot.pdf` | The same report in LaTeX (29 pages): Phenikaa cover, table of contents, lists of figures and tables; compiles with pdfLaTeX |
 | `Slides_Topic13_MultiDeliveryRobot.pptx` | Slides for the defence (20 slides, Phenikaa cover, speaker notes, the demo video of the app embedded on slide 17) |
 | `Kich_ban_thuyet_trinh.docx` | Presenter script in Vietnamese: time plan, per-slide talking points with a thumbnail, what to stress and transitions, demo checklist, likely questions and a one-page cheat sheet |
 | `IEEE_Paper/main.tex`, `IEEE_Paper_Overleaf.zip` | Paper in the IEEE conference template (8 pages): the 4 levels from easy to very hard with their optimal routes, comparison of the algorithms, where each policy goes wrong, `play.py` and `app.py` |
@@ -118,6 +121,9 @@ All documents are in `Nguyen_Quang_Trung-22011211/` (student Nguyen Quang Trung,
 
 **Open the paper in Overleaf** (log in to Overleaf, then click; it creates a new project from `IEEE_Paper_Overleaf.zip` on `main`):
 <https://www.overleaf.com/docs?snip_uri=https%3A%2F%2Fraw.githubusercontent.com%2FQwup2112%2Fmulti-delivery-robot-rl%2Fmain%2FNguyen_Quang_Trung-22011211%2FIEEE_Paper_Overleaf.zip>
+
+**Open the LaTeX report in Overleaf:**
+<https://www.overleaf.com/docs?snip_uri=https%3A%2F%2Fraw.githubusercontent.com%2FQwup2112%2Fmulti-delivery-robot-rl%2Fmain%2FNguyen_Quang_Trung-22011211%2FReport_LaTeX_Overleaf.zip>
 
 Or upload the zip by hand: Overleaf → New Project → Upload Project. To compile locally: `cd Nguyen_Quang_Trung-22011211/IEEE_Paper && pdflatex main.tex` (twice, for the references).
 
