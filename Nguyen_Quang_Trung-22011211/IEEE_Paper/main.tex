@@ -8,12 +8,56 @@
 \usepackage{xcolor}
 \usepackage{array}
 \usepackage{adjustbox}
+\usepackage{tikz}
 \graphicspath{{figures/}}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 \newcommand{\Qs}{Q^{*}}
 \newcommand{\eps}{\varepsilon}
 \begin{document}
+
+% ======================= COVER PAGE (Phenikaa course report) =======================
+\begin{titlepage}
+\begin{tikzpicture}[remember picture,overlay]
+  \draw[line width=1.2pt] ([xshift=1.5cm,yshift=-1.5cm]current page.north west) rectangle ([xshift=-1.5cm,yshift=1.5cm]current page.south east);
+  \draw[line width=0.6pt] ([xshift=-2.3cm,yshift=-2.1cm]current page.north east) rectangle ++(-1.5cm,-1.0cm);
+\end{tikzpicture}
+\centering
+\vspace*{0.2cm}
+{\large\bfseries PHENIKAA UNIVERSITY\par}
+{\large\bfseries SCHOOL OF ENGINEERING AND TECHNOLOGY\par}
+{\large\bfseries\underline{FACULTY OF ELECTRICAL AND ELECTRONIC ENGINEERING}\par}
+\vspace{0.7cm}
+\includegraphics[width=3.4cm]{phenikaa_logo.png}\par
+\vspace{0.7cm}
+{\large\bfseries COURSE PROJECT REPORT\par}
+{\large\bfseries REINFORCEMENT LEARNING\par}
+\vspace{0.7cm}
+{\bfseries Title of the project:\par}
+{\bfseries Topic 13 -- Multi-Delivery Robot:\par
+Learning the Pickup and Delivery Order of a Multi-Parcel Robot\par
+with Tabular Q-Learning, SARSA and Monte Carlo ES\par}
+\vspace{0.7cm}
+\begin{tabular}{@{}l l l l@{}}
+\textbf{Student:} & Nguyen Quang Trung & \textbf{Student ID:} & 22011211\\[2pt]
+\textbf{Supervisor:} & MSc. Vu Hoang Dieu & \textbf{Major:} & Electrical and Electronic Engineering\\
+\end{tabular}\par
+\vspace{0.9cm}
+\setlength{\fboxsep}{0pt}
+\fbox{\begin{minipage}[t][2.8cm]{4.2cm}\centering\vspace{4pt}{\small Score}\end{minipage}}\par
+\vspace{0.8cm}
+{\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{|p{6.3cm}|p{6.3cm}|}
+\hline
+\centering Lecturer 1 & \centering Lecturer 2 \tabularnewline
+\hline
+\parbox[b][2.6cm][b]{6.3cm}{\centering MSc. Vu Hoang Dieu\\[4pt]} & \\
+\hline
+\end{tabular}\par}
+\vfill
+{Hanoi, November 2026\par}
+\vspace*{0.3cm}
+\end{titlepage}
 
 \title{Learning the Pickup and Delivery Order of a Multi-Parcel Robot with Tabular Q-Learning, SARSA and Monte Carlo ES}
 
